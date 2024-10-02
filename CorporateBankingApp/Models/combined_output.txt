@@ -1,0 +1,253 @@
+
+--- Filename: Bank.cs ---
+﻿using static System.Net.Mime.MediaTypeNames;
+
+namespace CorporateBankingApp.Models
+{
+    public class Bank
+    {
+        public int BankId { get; set; }
+        public string BankName { get; set; }
+        public string BankIFSCCode { get; set; }
+        public string BankAddress { get; set; }
+        public string PostalCode { get; set; }
+        public string State { get; set; }
+        public string City { get; set; }
+        public string BankEmail { get; set; }
+        public BankKyc BankKyc { get; set; }
+        public List<Client> ClientList { get; set; }
+        public List<BankAccount> BankAccounts { get; set; }
+        public UserLogin UserLogin { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public 
+
+    }
+}
+
+
+--- Filename: BankAccount.cs ---
+﻿namespace CorporateBankingApp.Models
+{
+    public class BankAccount
+    {
+        public int AccountId { get; set; }
+        public string IfscCode { get; set; }
+        public double Balance { get; set; }
+        public double BlockedFunds { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public List<Transaction> Transactions { get; set; }
+    }
+}
+
+
+--- Filename: BankKyc.cs ---
+﻿using static System.Net.Mime.MediaTypeNames;
+using System.ComponentModel;
+
+namespace CorporateBankingApp.Models
+{
+    public class BankKyc
+    {
+        public int BankKycId { get; set; }
+        public string LicenseNumber { get; set; }
+        public FileDetail TaxpayerIdentificationNumber { get; set; }
+        public FileDetail LicenseRegulatorApprovalsOrLicenseAgreement { get; set; }
+        public FileDetail FinancialStatements{ get; set; }
+        public FileDetail AnnualReports { get; set; }
+
+    }
+}
+
+
+--- Filename: Beneficiary.cs ---
+﻿namespace CorporateBankingApp.Models
+{
+    public class BeneficiaryList
+    {
+        public int BeneficiaryId { get; set; }
+        public List<Client> ListofBeneficiaryInbound { get; set; }
+    }
+}
+
+
+--- Filename: Client.cs ---
+﻿
+namespace CorporateBankingApp.Models
+{
+    public class Client
+    {
+        public int ClientId { get; set; }
+        public string CompanyName { get; set; }
+        public string FounderName { get; set; }
+        public string Address { get; set; }
+        public string State { get; set; }
+        public string City { get; set; }
+        public string PostalCode { get; set; }
+        public string CompanyEmail { get; set; }
+        public string CompanyPhone { get; set; }
+        public UserLogin UserLogin { get; set; }
+        public ClientKyc ClientKyc { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public StatusEnum Status { get; set; }
+        public BankAccount BankAccount { get; set; }
+        public List<BeneficiaryList> BeneficiaryLists { get; set; }
+        public bool isActive { get; set; }
+    }
+}
+
+
+--- Filename: ClientKyc.cs ---
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace CorporateBankingApp.Models
+{
+    public class ClientKyc
+    {
+        public int ClientKycId { get; set; }
+        public string CINNumber { get; set; }
+        public string PanNumber { get; set; }
+        public FileDetail PowerOfAttorney { get; set; }
+        public FileDetail BankAccess { get; set; }
+        public FileDetail MOU { get; set; }
+ 
+    }
+}
+
+
+--- Filename: FileDetail.cs ---
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace CorporateBankingApp.Models
+{
+    public class FileDetail
+    {
+        public int FileId { get; set; }
+        public string FileName { get; set; }
+        public string FileExtension { get; set; }
+        public string FilePath { get; set; }
+        public DateTime DateUploaded { get; set; }
+
+    }
+}
+
+
+--- Filename: OutboundClientNEmployee.cs ---
+﻿namespace CorporateBankingApp.Models
+{
+    public class OutboundClientNEmployee
+    {
+    }
+}
+
+
+--- Filename: script.js ---
+const fs = require('fs');
+const path = require('path');
+
+// Directory path where the script is placed (current working directory)
+const directoryPath = __dirname;
+const outputFile = 'combined_output.txt';
+
+// Function to read files and append content to the output file
+function combineFiles() {
+    // Create or clear the output file
+    fs.writeFileSync(outputFile, '');
+
+    fs.readdir(directoryPath, (err, files) => {
+        if (err) {
+            return console.error('Unable to scan directory: ' + err);
+        }
+
+        // Iterate through all the files in the directory
+        files.forEach((file) => {
+            const filePath = path.join(directoryPath, file);
+
+            // Check if it's a file and not a directory or the output file itself
+            if (fs.lstatSync(filePath).isFile() && file !== outputFile) {
+                // Write the filename
+                fs.appendFileSync(outputFile, `\n--- Filename: ${file} ---\n`);
+
+                // Read and append the file content
+                const fileContent = fs.readFileSync(filePath, 'utf8');
+                fs.appendFileSync(outputFile, fileContent + '\n');
+
+                console.log(`Filename: ${file} and its content have been appended.`);
+            }
+        });
+
+        console.log('All files have been combined successfully into ' + outputFile);
+    });
+}
+
+combineFiles();
+
+
+--- Filename: StatusEnum.cs ---
+﻿namespace CorporateBankingApp.Models
+{
+    public enum StatusEnum
+    {
+        Submitted = 1,
+        Approved = 2,
+        Rejected = 3
+    }
+}
+
+
+--- Filename: SuperAdmin.cs ---
+﻿namespace CorporateBankingApp.Models
+{
+    public class SuperAdmin
+    {
+        public int AdminId { get; set; }
+        public string Name { get; set; }
+        public UserLogin UserLogin { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public bool isActive { get; set; }
+
+    }
+}
+
+
+--- Filename: Transaction.cs ---
+﻿namespace CorporateBankingApp.Models
+{
+    public class Transaction
+    {
+        public int TransactionId { get; set; }
+        public int SenderId { get; set; }
+        public int ReceiverId { get; set; }
+        public DateTime DateTime { get; set; }
+        public string Amount { get; set; }
+
+    }
+}
+
+
+--- Filename: UserLogin.cs ---
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace CorporateBankingApp.Models
+{
+    public class UserLogin
+    {
+        public int Id { get; set; }
+        public string LoginUserName { get; set; }
+        public string PasswordHash { get; set; }
+        public UserType UserType { get; set; }
+    }
+}
+
+
+--- Filename: UserType.cs ---
+﻿namespace CorporateBankingApp.Models
+{
+    public enum UserType
+    {
+        SuperAdmin = 1,
+        Bank = 2,
+        Client = 3
+    }
+}
+

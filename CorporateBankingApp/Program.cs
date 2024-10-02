@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddDbContext<CorporateBankAppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("CorporateBankingDB")));
-builder.Services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
+//builder.Services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
