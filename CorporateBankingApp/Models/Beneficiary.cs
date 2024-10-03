@@ -12,6 +12,6 @@ namespace CorporateBankingApp.Models
         public int BeneficiaryId { get; set; }
         [JsonIgnore]
         [ValidateNever]        
-        public List<Client> ListofBeneficiaryInbound { get; set; }
+        public List<Int32> ListofBeneficiary { get; set; }
     }
 }

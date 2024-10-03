@@ -28,7 +28,7 @@ namespace CorporateBankingApp.Repositories
 
         public async Task<Client> GetByIdAsync(int id)
         {
-            return await _context.Clients.FindAsync(id);
+            return await _context.Clients.FirstOrDefaultAsync();
         }
 
         public async Task AddAsync(Client client)

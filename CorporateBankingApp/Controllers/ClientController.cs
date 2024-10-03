@@ -145,5 +145,74 @@ namespace CorporateBankingApp.Controllers
             return Ok(new { message = "KYC documents uploaded successfully." });
 
         }
+<<<<<<< Updated upstream
+=======
+
+        [HttpPost("AcceptClient/{id)}")]
+        public async Task<ActionResult> OnboardClient(int id)
+        {
+            Client client = await _clientService.GetClientByIdAsync(id);
+
+            Bank bank = await _bankService.GetBankByIdAsync(1);
+            BankAccount bankAccount = new BankAccount() { Balance = 50000000, BlockedFunds = 0, CreatedAt = DateTime.Now, Transactions = new List<Transaction>() };
+            bank.BankAccounts.Add(bankAccount);
+            client.BankAccount = bankAccount;
+            client.BeneficiaryLists = new List<BeneficiaryList>();
+            client.Status = StatusEnum.Approved;
+            _dbContext.SaveChanges();
+            return NoContent();
+        }
+
+        [HttpPost("RejectClient/{id)}")]
+        public async Task<ActionResult> RejectClient(int id)
+        {
+            Client client = await _clientService.GetClientByIdAsync(id);
+            client.Status = StatusEnum.Rejected;
+            client.isActive = false;
+            _dbContext.SaveChanges();
+            return NoContent();
+        }
+
+        [HttpPost("NewBeneficiaryOutboundClient")]
+        public async Task<ActionResult> NewBeneficiaryOutboundClient([FromForm] NewClientDTO clientDTO)
+        {
+            var client = _mapper.Map<Client>(clientDTO);
+
+            UserLogin userLogin = new UserLogin();
+            userLogin.LoginUserName = clientDTO.CompanyName.Substring(0, 4) + client.ClientId;
+            userLogin.PasswordHash = "Admin@123";
+            userLogin.UserType = UserType.Client;
+
+            client.UserLogin = userLogin;
+            client.CreatedAt = DateTime.Now;
+            client.Status = StatusEnum.Submitted;
+            client.isActive = true;
+
+            await _clientService.CreateClientAsync(client);
+
+            string body = client.UserLogin.LoginUserName + client.UserLogin.PasswordHash + client.ClientId;
+            _emailService.SendEmail("atharvsathe0302@gmail.com", "New Registration", body);
+
+            return CreatedAtAction(nameof(GetClientById), new { id = client.ClientId }, client);
+        }
+
+        [HttpPost("AddBeneficiary")]
+        public async Task<ActionResult> AddBeneficiary(List<Int32> ids)
+        {
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> Stashed changes
     }
 }
