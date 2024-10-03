@@ -6,12 +6,9 @@ using CorporateBankingApp.Services;
 using CorporateBankingApp.DTO;
 using CorporateBankingApp.Service;
 using AutoMapper;
-<<<<<<< Updated upstream
 using Microsoft.AspNetCore.Authorization;
 using CorporateBankingApp.Data;
-=======
 using System;
->>>>>>> Stashed changes
 
 namespace CorporateBankingApp.Controllers
 {
@@ -25,12 +22,12 @@ namespace CorporateBankingApp.Controllers
         private readonly IBankService _bankService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly CorporateBankAppDbContext _dbContext;
-        public ClientController(IClientService clientService, IEmailService emailService ,IMapper mapper ,IBankService bankService,IHttpContextAccessor httpContextAccessor,CorporateBankAppDbContext corporateBankAppDbContext)
+        public ClientController(IClientService clientService, IEmailService emailService, IMapper mapper, IBankService bankService, IHttpContextAccessor httpContextAccessor, CorporateBankAppDbContext corporateBankAppDbContext)
         {
             _clientService = clientService;
             _emailService = emailService;
             _mapper = mapper;
-            _bankService = bankService; 
+            _bankService = bankService;
             _httpContextAccessor = httpContextAccessor;
             _dbContext = corporateBankAppDbContext;
 
@@ -45,7 +42,7 @@ namespace CorporateBankingApp.Controllers
 
         [HttpGet("GetAllSubmitted")]
         public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllSubmittedClients()
-        {  
+        {
             var clients = await _clientService.GetAllClientsAsync();
             var clientsToReturn = new List<ViewSubmittedClientDTO>();
             foreach (var client in clients)
@@ -79,7 +76,7 @@ namespace CorporateBankingApp.Controllers
             userLogin.LoginUserName = clientDTO.CompanyName.Substring(0, 4) + client.ClientId;
             userLogin.PasswordHash = "Admin@123";
             userLogin.UserType = UserType.Client;
-            
+
             client.UserLogin = userLogin;
             client.CreatedAt = DateTime.Now;
             client.Status = StatusEnum.Submitted;
@@ -88,7 +85,7 @@ namespace CorporateBankingApp.Controllers
             await _clientService.CreateClientAsync(client);
 
             string body = client.UserLogin.LoginUserName + client.UserLogin.PasswordHash + client.ClientId;
-            _emailService.SendEmail("atharvsathe0302@gmail.com", "New Registration",body);
+            _emailService.SendEmail("atharvsathe0302@gmail.com", "New Registration", body);
 
             return CreatedAtAction(nameof(GetClientById), new { id = client.ClientId }, client);
         }
@@ -110,7 +107,7 @@ namespace CorporateBankingApp.Controllers
 
         [Authorize]
         [HttpPost("upload-kyc-documents")]
-        public async Task<IActionResult> UploadKYCDocuments(IFormFile PowerOfAttorney, IFormFile BankAccess, IFormFile MOU , ClientKYCDTO clientKyc)
+        public async Task<IActionResult> UploadKYCDocuments(IFormFile PowerOfAttorney, IFormFile BankAccess, IFormFile MOU, ClientKYCDTO clientKyc)
         {
             var user = _httpContextAccessor.HttpContext.User;
             var clientIdClaim = user.FindFirst("UserId").Value;
@@ -138,7 +135,7 @@ namespace CorporateBankingApp.Controllers
 
             client.ClientKyc.CINNumber = clientKyc.CINNumber;
             client.ClientKyc.PanNumber = clientKyc.PANNumber;
-            client.ClientKyc.MOU =  uploadResultMOU;
+            client.ClientKyc.MOU = uploadResultMOU;
             client.ClientKyc.BankAccess = uploadResultBankAccess;
             client.ClientKyc.PowerOfAttorney = uploadResultPowerOfAttorney;
 
@@ -148,8 +145,5 @@ namespace CorporateBankingApp.Controllers
             return Ok(new { message = "KYC documents uploaded successfully." });
 
         }
-
-        [HttpPost("")]
-
-}
+    }
 }

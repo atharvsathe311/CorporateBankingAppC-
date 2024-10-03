@@ -29,9 +29,7 @@ builder.Services.AddScoped<IClientRepository,ClientRepository>();
 builder.Services.AddScoped<IBankRepository, BankRepository>();
 builder.Services.AddScoped<ISuperAdminRepository, SuperAdminRepository>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
-<<<<<<< Updated upstream
 builder.Services.AddHttpContextAccessor();
-=======
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -42,7 +40,6 @@ builder.Services.AddCors(options =>
                    .AllowAnyHeader();
         });
 });
->>>>>>> Stashed changes
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
