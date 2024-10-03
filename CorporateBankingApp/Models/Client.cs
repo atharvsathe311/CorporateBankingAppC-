@@ -1,4 +1,7 @@
 ﻿
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.Text.Json.Serialization;
+
 namespace CorporateBankingApp.Models
 {
     public class Client

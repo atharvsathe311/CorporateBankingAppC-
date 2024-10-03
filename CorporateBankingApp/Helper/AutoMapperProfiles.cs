@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using CorporateBankingApp.DTO;
+using CorporateBankingApp.Models;
 
 namespace CorporateBankingApp.Helper
 {
@@ -6,7 +8,7 @@ namespace CorporateBankingApp.Helper
     {
         public AutoMapperProfiles()
         {
-            //CreateMap<User, UserDTO>().ReverseMap();
+            CreateMap<Client, NewClientDTO>().ReverseMap();
         }
 
     }
