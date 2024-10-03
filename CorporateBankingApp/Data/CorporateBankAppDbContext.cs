@@ -9,7 +9,6 @@ namespace CorporateBankingApp.Data
         public DbSet<BankAccount> BankAccounts { get; set; }
         public DbSet<BankKyc> BankKycs { get; set; }
         public DbSet<Client> Clients { get; set; }
-        //public DbSet<BeneficiaryList> BeneficiaryLists { get; set; }
         public DbSet<FileDetail> FileDetails { get; set; }
         public DbSet<SuperAdmin> SuperAdmins { get; set; }
         public DbSet<Transaction> Transactions { get; set; }

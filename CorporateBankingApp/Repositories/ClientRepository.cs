@@ -28,7 +28,13 @@ namespace CorporateBankingApp.Repositories
 
         public async Task<Client> GetByIdAsync(int id)
         {
-            return await _context.Clients.FirstOrDefaultAsync();
+            return await _context.Clients
+       .Include(c => c.UserLogin)
+       .Include(c => c.ClientKyc)
+       .Include(c => c.BankAccount)
+       .Include(c => c.BeneficiaryLists)
+       .FirstOrDefaultAsync(c => c.ClientId == id);
+
         }
 
         public async Task AddAsync(Client client)
@@ -51,6 +57,17 @@ namespace CorporateBankingApp.Repositories
                 _context.Clients.Remove(client);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<BankAccount> GetClientBankAccount(int id)
+        {
+            Client client = await _context.Clients.Include(c => c.BankAccount).FirstOrDefaultAsync(c => c.ClientId == id);
+            return client.BankAccount;
+        }
+
+        public async Task AddTransaction(Transaction transaction)
+        {
+            _context.Transactions.Add(transaction);
         }
     }
 }

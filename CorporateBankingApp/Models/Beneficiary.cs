@@ -8,10 +8,10 @@ namespace CorporateBankingApp.Models
 {
     public class BeneficiaryList
     {
-        [Key]
-        public int BeneficiaryId { get; set; } 
-        public List<Int32> ListofBeneficiary { get; set; }
-        public List<Int32> ListofBeneficiaryOutbound { get; set; }
+        //[Key]
+        //public int BeneficiaryId { get; set; } 
+        //public List<int> ListofBeneficiary { get; set; }
+        //public List<int> ListofBeneficiaryOutbound { get; set; }
 
     }
 

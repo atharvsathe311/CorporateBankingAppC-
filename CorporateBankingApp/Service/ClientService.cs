@@ -86,5 +86,15 @@ namespace CorporateBankingApp.Services
         }
 
 
+        public async Task<BankAccount> GetClientBankAccount(int id)
+        {
+            return await _clientRepository.GetClientBankAccount(id);
+        }
+
+        public async Task AddTransaction(Transaction transaction)
+        {
+            _clientRepository.AddTransaction(transaction);
+        }
+
     }
 }

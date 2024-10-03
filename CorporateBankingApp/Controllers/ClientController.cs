@@ -22,6 +22,7 @@ namespace CorporateBankingApp.Controllers
         private readonly IBankService _bankService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly CorporateBankAppDbContext _dbContext;
+
         public ClientController(IClientService clientService, IEmailService emailService, IMapper mapper, IBankService bankService, IHttpContextAccessor httpContextAccessor, CorporateBankAppDbContext corporateBankAppDbContext)
         {
             _clientService = clientService;
@@ -53,19 +54,19 @@ namespace CorporateBankingApp.Controllers
             return Ok(clientsToReturn);
         }
 
-        [HttpGet("SendEmail")]
-        public void SendEmail()
-        {
-            _emailService.SendEmail("atharvsathe0302@gmail.com", "Test Subject", "This is a test email sent using Gmail");
-        }
+        //[HttpGet("SendEmail")]
+        //public void SendEmail()
+        //{
+        //    _emailService.SendEmail("atharvsathe0302@gmail.com", "Test Subject", "This is a test email sent using Gmail");
+        //}
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Client>> GetClientById(int id)
-        {
-            var client = await _clientService.GetClientByIdAsync(id);
-            if (client == null) return NotFound();
-            return Ok(client);
-        }
+        //[HttpGet("{id}")]
+        //public async Task<ActionResult<Client>> GetClientById(int id)
+        //{
+        //    var client = await _clientService.GetClientByIdAsync(id);
+        //    if (client == null) return NotFound();
+        //    return Ok(client);
+        //}
 
         [HttpPost]
         public async Task<ActionResult> CreateClient([FromForm] NewClientDTO clientDTO)
@@ -85,9 +86,9 @@ namespace CorporateBankingApp.Controllers
             await _clientService.CreateClientAsync(client);
 
             string body = client.UserLogin.LoginUserName + client.UserLogin.PasswordHash + client.ClientId;
-            _emailService.SendEmail("atharvsathe0302@gmail.com", "New Registration", body);
+            _emailService.SendEmail(clientDTO.CompanyEmail, "New Registration", body);
 
-            return CreatedAtAction(nameof(GetClientById), new { id = client.ClientId }, client);
+            return Ok(client);
         }
 
         [HttpPut("{id}")]
@@ -95,13 +96,6 @@ namespace CorporateBankingApp.Controllers
         {
             if (id != client.ClientId) return BadRequest();
             await _clientService.UpdateClientAsync(client);
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteClient(int id)
-        {
-            await _clientService.DeleteClientAsync(id);
             return NoContent();
         }
 
@@ -171,33 +165,35 @@ namespace CorporateBankingApp.Controllers
         }
 
         [HttpPost("NewBeneficiaryOutboundClient")]
-        public async Task<ActionResult> NewBeneficiaryOutboundClient([FromForm] NewClientDTO clientDTO)
+        public async Task<ActionResult> NewBeneficiaryOutboundClient([FromForm] OutboundBeneficiaryDTO clientDTO)
         {
             var client = _mapper.Map<Client>(clientDTO);
 
-            UserLogin userLogin = new UserLogin();
-            userLogin.LoginUserName = clientDTO.CompanyName.Substring(0, 4) + client.ClientId;
-            userLogin.PasswordHash = "Admin@123";
-            userLogin.UserType = UserType.Client;
-
-            client.UserLogin = userLogin;
             client.CreatedAt = DateTime.Now;
-            client.Status = StatusEnum.Submitted;
             client.isActive = true;
 
+            Bank bank = await _bankService.GetBankByIdAsync(1);
+            BankAccount bankAccount = new BankAccount() { Balance = 50000000, BlockedFunds = 0, CreatedAt = DateTime.Now };
+            bank.BankAccounts.Add(bankAccount);
+            client.BankAccount = bankAccount;
+            client.isBeneficiaryOutbound = true;
             await _clientService.CreateClientAsync(client);
-
-            string body = client.UserLogin.LoginUserName + client.UserLogin.PasswordHash + client.ClientId;
-            _emailService.SendEmail("atharvsathe0302@gmail.com", "New Registration", body);
-
-            return CreatedAtAction(nameof(GetClientById), new { id = client.ClientId }, client);
+            return Ok(client);
         }
 
-        //[HttpPost("AddBeneficiary")]
-        //public async Task<ActionResult> AddBeneficiary(List<Int32> ids)
-        //{
+        [HttpPost("AddBeneficiary")]
+        public async Task<ActionResult> AddBeneficiary(List<int> ids)
+        {
+            var user = _httpContextAccessor.HttpContext.User;
+            var clientIdClaim = user.FindFirst("UserId").Value;
 
-        //}
+            Client client = await _clientService.GetClientByIdAsync(int.Parse(clientIdClaim));
+
+            client.BeneficiaryLists.AddRange(ids);
+            _dbContext.SaveChanges();
+            
+            return Ok("Saved");
+        }
 
 
 

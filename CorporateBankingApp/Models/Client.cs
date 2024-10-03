@@ -22,8 +22,9 @@ namespace CorporateBankingApp.Models
         public DateTime CreatedAt { get; set; }
         public StatusEnum? Status { get; set; }
         public BankAccount? BankAccount { get; set; }
-        public List<BeneficiaryList>? BeneficiaryLists { get; set; }
+        public List<int>? BeneficiaryLists { get; set; }
         public bool isActive { get; set; }
         public bool isBeneficiaryOutbound { get; set; } = false;
+        
     }
 }

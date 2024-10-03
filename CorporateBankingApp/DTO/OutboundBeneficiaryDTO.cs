@@ -2,9 +2,10 @@
 
 namespace CorporateBankingApp.DTO
 {
-    public class OutboundBeneficiary
+    public class OutboundBeneficiaryDTO
     {
         public string CompanyName { get; set; }
         public BankAccount Account { get; set; }
     }
+
 }
