@@ -48,7 +48,7 @@ namespace CorporateBankingApp.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> CreateClient(NewClientDTO clientDTO)
+        public async Task<ActionResult> CreateClient([FromForm] NewClientDTO clientDTO)
         {
             var client = _mapper.Map<Client>(clientDTO);
 

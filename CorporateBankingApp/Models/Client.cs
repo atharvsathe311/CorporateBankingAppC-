@@ -16,13 +16,13 @@ namespace CorporateBankingApp.Models
         public string CompanyEmail { get; set; }
         public string CompanyPhone { get; set; }
         public UserLogin UserLogin { get; set; }
-        public ClientKyc ClientKyc { get; set; }
+        public ClientKyc? ClientKyc { get; set; }
         public DateTime CreatedAt { get; set; }
         public StatusEnum Status { get; set; }
         [JsonIgnore]
         [ValidateNever]
-        public BankAccount BankAccount { get; set; }
-        public List<BeneficiaryList> BeneficiaryLists { get; set; }
+        public BankAccount? BankAccount { get; set; }
+        public List<BeneficiaryList>? BeneficiaryLists { get; set; }
         public bool isActive { get; set; }
     }
 }

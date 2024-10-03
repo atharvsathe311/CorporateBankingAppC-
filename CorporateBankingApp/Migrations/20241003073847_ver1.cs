@@ -165,7 +165,7 @@ namespace CorporateBankingApp.Migrations
                     State = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     City = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BankEmail = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    BankKycId = table.Column<int>(type: "int", nullable: false),
+                    BankKycId = table.Column<int>(type: "int", nullable: true),
                     UserLoginId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     isActive = table.Column<bool>(type: "bit", nullable: false)
@@ -177,8 +177,7 @@ namespace CorporateBankingApp.Migrations
                         name: "FK_Banks_BankKycs_BankKycId",
                         column: x => x.BankKycId,
                         principalTable: "BankKycs",
-                        principalColumn: "BankKycId",
-                        onDelete: ReferentialAction.NoAction);
+                        principalColumn: "BankKycId");
                     table.ForeignKey(
                         name: "FK_Banks_UserLogins_UserLoginId",
                         column: x => x.UserLoginId,
@@ -224,10 +223,10 @@ namespace CorporateBankingApp.Migrations
                     CompanyEmail = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CompanyPhone = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UserLoginId = table.Column<int>(type: "int", nullable: false),
-                    ClientKycId = table.Column<int>(type: "int", nullable: false),
+                    ClientKycId = table.Column<int>(type: "int", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
-                    BankAccountAccountId = table.Column<int>(type: "int", nullable: false),
+                    BankAccountAccountId = table.Column<int>(type: "int", nullable: true),
                     isActive = table.Column<bool>(type: "bit", nullable: false),
                     BankId = table.Column<int>(type: "int", nullable: true)
                 },
@@ -238,8 +237,7 @@ namespace CorporateBankingApp.Migrations
                         name: "FK_Clients_BankAccounts_BankAccountAccountId",
                         column: x => x.BankAccountAccountId,
                         principalTable: "BankAccounts",
-                        principalColumn: "AccountId",
-                        onDelete: ReferentialAction.NoAction);
+                        principalColumn: "AccountId");
                     table.ForeignKey(
                         name: "FK_Clients_Banks_BankId",
                         column: x => x.BankId,
@@ -249,8 +247,7 @@ namespace CorporateBankingApp.Migrations
                         name: "FK_Clients_ClientKyc_ClientKycId",
                         column: x => x.ClientKycId,
                         principalTable: "ClientKyc",
-                        principalColumn: "ClientKycId",
-                        onDelete: ReferentialAction.NoAction);
+                        principalColumn: "ClientKycId");
                     table.ForeignKey(
                         name: "FK_Clients_UserLogins_UserLoginId",
                         column: x => x.UserLoginId,

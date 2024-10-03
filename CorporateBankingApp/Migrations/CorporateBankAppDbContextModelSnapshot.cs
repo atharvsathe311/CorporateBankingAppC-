@@ -57,7 +57,7 @@ namespace CorporateBankingApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("BankKycId")
+                    b.Property<int?>("BankKycId")
                         .HasColumnType("int");
 
                     b.Property<string>("BankName")
@@ -183,7 +183,7 @@ namespace CorporateBankingApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("BankAccountAccountId")
+                    b.Property<int?>("BankAccountAccountId")
                         .HasColumnType("int");
 
                     b.Property<int?>("BankId")
@@ -193,7 +193,7 @@ namespace CorporateBankingApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ClientKycId")
+                    b.Property<int?>("ClientKycId")
                         .HasColumnType("int");
 
                     b.Property<string>("CompanyEmail")
@@ -411,9 +411,7 @@ namespace CorporateBankingApp.Migrations
                 {
                     b.HasOne("CorporateBankingApp.Models.BankKyc", "BankKyc")
                         .WithMany()
-                        .HasForeignKey("BankKycId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("BankKycId");
 
                     b.HasOne("CorporateBankingApp.Models.UserLogin", "UserLogin")
                         .WithMany()
@@ -474,9 +472,7 @@ namespace CorporateBankingApp.Migrations
                 {
                     b.HasOne("CorporateBankingApp.Models.BankAccount", "BankAccount")
                         .WithMany()
-                        .HasForeignKey("BankAccountAccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("BankAccountAccountId");
 
                     b.HasOne("CorporateBankingApp.Models.Bank", null)
                         .WithMany("ClientList")
@@ -484,9 +480,7 @@ namespace CorporateBankingApp.Migrations
 
                     b.HasOne("CorporateBankingApp.Models.ClientKyc", "ClientKyc")
                         .WithMany()
-                        .HasForeignKey("ClientKycId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ClientKycId");
 
                     b.HasOne("CorporateBankingApp.Models.UserLogin", "UserLogin")
                         .WithMany()
