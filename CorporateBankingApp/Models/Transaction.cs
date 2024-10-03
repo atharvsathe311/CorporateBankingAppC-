@@ -1,4 +1,6 @@
-﻿namespace CorporateBankingApp.Models
+﻿using System;
+
+namespace CorporateBankingApp.Models
 {
     public class Transaction
     {

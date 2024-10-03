@@ -6,8 +6,12 @@ using CorporateBankingApp.Services;
 using CorporateBankingApp.DTO;
 using CorporateBankingApp.Service;
 using AutoMapper;
+<<<<<<< Updated upstream
 using Microsoft.AspNetCore.Authorization;
 using CorporateBankingApp.Data;
+=======
+using System;
+>>>>>>> Stashed changes
 
 namespace CorporateBankingApp.Controllers
 {
@@ -37,6 +41,19 @@ namespace CorporateBankingApp.Controllers
         {
             var clients = await _clientService.GetAllClientsAsync();
             return Ok(clients);
+        }
+
+        [HttpGet("GetAllSubmitted")]
+        public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllSubmittedClients()
+        {  
+            var clients = await _clientService.GetAllClientsAsync();
+            var clientsToReturn = new List<ViewSubmittedClientDTO>();
+            foreach (var client in clients)
+            {
+                var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
+                clientsToReturn.Add(submittedClient);
+            }
+            return Ok(clientsToReturn);
         }
 
         [HttpGet("SendEmail")]

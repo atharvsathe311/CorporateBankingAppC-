@@ -21,6 +21,11 @@ namespace CorporateBankingApp.Repositories
             return await _context.Clients.ToListAsync();
         }
 
+        public async Task<IEnumerable<Client>> GetAllSubmittedAsync()
+        {
+            return await _context.Clients.Where(c => c.Status == StatusEnum.Submitted).ToListAsync();
+        }
+
         public async Task<Client> GetByIdAsync(int id)
         {
             return await _context.Clients.FindAsync(id);

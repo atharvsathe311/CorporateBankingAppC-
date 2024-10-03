@@ -21,6 +21,11 @@ namespace CorporateBankingApp.Services
             return await _clientRepository.GetAllAsync();
         }
 
+        public async Task<IEnumerable<Client>> GetAllSubmittedClientsAsync()
+        {
+            return await _clientRepository.GetAllSubmittedAsync();
+        }
+
         public async Task<Client> GetClientByIdAsync(int id)
         {
             var client = await _clientRepository.GetByIdAsync(id);

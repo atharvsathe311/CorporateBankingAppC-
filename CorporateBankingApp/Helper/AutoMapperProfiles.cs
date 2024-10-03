@@ -9,8 +9,8 @@ namespace CorporateBankingApp.Helper
         public AutoMapperProfiles()
         {
             CreateMap<Client, NewClientDTO>().ReverseMap();
+            CreateMap<ViewSubmittedClientDTO, Client>().ReverseMap();
         }
-
     }
 }
  

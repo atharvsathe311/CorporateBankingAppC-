@@ -7,6 +7,7 @@ namespace CorporateBankingApp.Services
     public interface IClientService
     {
         Task<IEnumerable<Client>> GetAllClientsAsync();
+        Task<IEnumerable<Client>> GetAllSubmittedClientsAsync();
         Task<Client> GetClientByIdAsync(int id);
         Task CreateClientAsync(Client client);
         Task UpdateClientAsync(Client client);

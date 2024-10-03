@@ -1,4 +1,6 @@
-﻿using static System.Net.Mime.MediaTypeNames;
+﻿using System;
+using System.Collections.Generic;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace CorporateBankingApp.Models
 {

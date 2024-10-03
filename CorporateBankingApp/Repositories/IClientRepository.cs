@@ -7,6 +7,7 @@ namespace CorporateBankingApp.Repositories
     public interface IClientRepository
     {
         Task<IEnumerable<Client>> GetAllAsync();
+        Task<IEnumerable<Client>> GetAllSubmittedAsync();
         Task<Client> GetByIdAsync(int id);
         Task AddAsync(Client client);
         Task UpdateAsync(Client client);
