@@ -93,7 +93,13 @@ namespace CorporateBankingApp.Services
 
         public async Task AddTransaction(Transaction transaction)
         {
-            _clientRepository.AddTransaction(transaction);
+            await _clientRepository.AddTransaction(transaction);
+        }
+
+        public async Task<int> GetCounter()
+        {
+            var newCounterValue = await _clientRepository.IncrementCounterAsync();
+            return newCounterValue;
         }
 
     }

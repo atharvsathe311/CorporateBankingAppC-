@@ -69,5 +69,27 @@ namespace CorporateBankingApp.Repositories
         {
             _context.Transactions.Add(transaction);
         }
+
+
+        public async Task<int> IncrementCounterAsync()
+        {
+            var counter = await _context.ClientCounter.FirstOrDefaultAsync();
+
+            if (counter == null)
+            {
+                // Initialize counter if not present
+                counter = new Counter { CounterValue = 1001 };
+                _context.ClientCounter.Add(counter);
+            }
+            else
+            {
+                // Increment existing counter
+                counter.CounterValue += 1;
+                _context.ClientCounter.Update(counter);
+            }
+
+            await _context.SaveChangesAsync();
+            return counter.CounterValue;
+        }
     }
 }

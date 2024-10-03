@@ -15,6 +15,7 @@ namespace CorporateBankingApp.Services
         FileDetail Upload(IFormFile file);
         Task<BankAccount> GetClientBankAccount(int id);
         Task AddTransaction(Transaction transaction);
+        Task<int> GetCounter();
 
     }
 }

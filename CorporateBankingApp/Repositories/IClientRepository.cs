@@ -14,5 +14,6 @@ namespace CorporateBankingApp.Repositories
         Task DeleteAsync(int id);
         Task<BankAccount> GetClientBankAccount(int id);
         Task AddTransaction(Transaction transaction);
+        Task<int> IncrementCounterAsync();
     }
 }

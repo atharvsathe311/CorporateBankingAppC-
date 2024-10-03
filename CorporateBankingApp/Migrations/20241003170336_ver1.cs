@@ -12,15 +12,16 @@ namespace CorporateBankingApp.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "BeneficiaryLists",
+                name: "ClientCounter",
                 columns: table => new
                 {
-                    BeneficiaryId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1")
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CounterValue = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BeneficiaryLists", x => x.BeneficiaryId);
+                    table.PrimaryKey("PK_ClientCounter", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -32,7 +33,8 @@ namespace CorporateBankingApp.Migrations
                     FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileExtension = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FilePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    DateUploaded = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    DateUploaded = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -215,19 +217,21 @@ namespace CorporateBankingApp.Migrations
                     ClientId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    FounderName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    State = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    City = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PostalCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CompanyEmail = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CompanyPhone = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserLoginId = table.Column<int>(type: "int", nullable: false),
+                    FounderName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    State = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    City = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PostalCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CompanyEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CompanyPhone = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserLoginId = table.Column<int>(type: "int", nullable: true),
                     ClientKycId = table.Column<int>(type: "int", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: true),
                     BankAccountAccountId = table.Column<int>(type: "int", nullable: true),
+                    BeneficiaryLists = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     isActive = table.Column<bool>(type: "bit", nullable: false),
+                    isBeneficiaryOutbound = table.Column<bool>(type: "bit", nullable: false),
                     BankId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -252,8 +256,7 @@ namespace CorporateBankingApp.Migrations
                         name: "FK_Clients_UserLogins_UserLoginId",
                         column: x => x.UserLoginId,
                         principalTable: "UserLogins",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -266,6 +269,8 @@ namespace CorporateBankingApp.Migrations
                     ReceiverId = table.Column<int>(type: "int", nullable: false),
                     DateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Amount = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BankAccountAccountId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -276,30 +281,6 @@ namespace CorporateBankingApp.Migrations
                         column: x => x.BankAccountAccountId,
                         principalTable: "BankAccounts",
                         principalColumn: "AccountId");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "BeneficiaryListClient",
-                columns: table => new
-                {
-                    BeneficiaryListsBeneficiaryId = table.Column<int>(type: "int", nullable: false),
-                    ListofBeneficiaryInboundClientId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_BeneficiaryListClient", x => new { x.BeneficiaryListsBeneficiaryId, x.ListofBeneficiaryInboundClientId });
-                    table.ForeignKey(
-                        name: "FK_BeneficiaryListClient_BeneficiaryLists_BeneficiaryListsBeneficiaryId",
-                        column: x => x.BeneficiaryListsBeneficiaryId,
-                        principalTable: "BeneficiaryLists",
-                        principalColumn: "BeneficiaryId",
-                        onDelete: ReferentialAction.NoAction);
-                    table.ForeignKey(
-                        name: "FK_BeneficiaryListClient_Clients_ListofBeneficiaryInboundClientId",
-                        column: x => x.ListofBeneficiaryInboundClientId,
-                        principalTable: "Clients",
-                        principalColumn: "ClientId",
-                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateIndex(
@@ -336,11 +317,6 @@ namespace CorporateBankingApp.Migrations
                 name: "IX_Banks_UserLoginId",
                 table: "Banks",
                 column: "UserLoginId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_BeneficiaryListClient_ListofBeneficiaryInboundClientId",
-                table: "BeneficiaryListClient",
-                column: "ListofBeneficiaryInboundClientId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ClientKyc_BankAccessFileId",
@@ -392,7 +368,10 @@ namespace CorporateBankingApp.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "BeneficiaryListClient");
+                name: "ClientCounter");
+
+            migrationBuilder.DropTable(
+                name: "Clients");
 
             migrationBuilder.DropTable(
                 name: "SuperAdmins");
@@ -401,16 +380,10 @@ namespace CorporateBankingApp.Migrations
                 name: "Transactions");
 
             migrationBuilder.DropTable(
-                name: "BeneficiaryLists");
-
-            migrationBuilder.DropTable(
-                name: "Clients");
+                name: "ClientKyc");
 
             migrationBuilder.DropTable(
                 name: "BankAccounts");
-
-            migrationBuilder.DropTable(
-                name: "ClientKyc");
 
             migrationBuilder.DropTable(
                 name: "Banks");

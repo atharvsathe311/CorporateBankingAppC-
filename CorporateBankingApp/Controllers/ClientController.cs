@@ -73,6 +73,8 @@ namespace CorporateBankingApp.Controllers
         {
             var client = _mapper.Map<Client>(clientDTO);
 
+            int count = await _clientService.GetCounter();
+
             UserLogin userLogin = new UserLogin();
             userLogin.LoginUserName = clientDTO.CompanyName.Substring(0, 4) + client.ClientId;
             userLogin.PasswordHash = "Admin@123";

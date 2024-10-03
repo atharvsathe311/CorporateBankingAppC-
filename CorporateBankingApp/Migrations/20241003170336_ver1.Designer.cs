@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CorporateBankingApp.Migrations
 {
     [DbContext(typeof(CorporateBankAppDbContext))]
-    [Migration("20241003073847_ver1")]
+    [Migration("20241003170336_ver1")]
     partial class ver1
     {
         /// <inheritdoc />
@@ -24,21 +24,6 @@ namespace CorporateBankingApp.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("BeneficiaryListClient", b =>
-                {
-                    b.Property<int>("BeneficiaryListsBeneficiaryId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ListofBeneficiaryInboundClientId")
-                        .HasColumnType("int");
-
-                    b.HasKey("BeneficiaryListsBeneficiaryId", "ListofBeneficiaryInboundClientId");
-
-                    b.HasIndex("ListofBeneficiaryInboundClientId");
-
-                    b.ToTable("BeneficiaryListClient");
-                });
 
             modelBuilder.Entity("CorporateBankingApp.Models.Bank", b =>
                 {
@@ -161,19 +146,6 @@ namespace CorporateBankingApp.Migrations
                     b.ToTable("BankKycs");
                 });
 
-            modelBuilder.Entity("CorporateBankingApp.Models.BeneficiaryList", b =>
-                {
-                    b.Property<int>("BeneficiaryId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BeneficiaryId"));
-
-                    b.HasKey("BeneficiaryId");
-
-                    b.ToTable("BeneficiaryLists");
-                });
-
             modelBuilder.Entity("CorporateBankingApp.Models.Client", b =>
                 {
                     b.Property<int>("ClientId")
@@ -183,7 +155,6 @@ namespace CorporateBankingApp.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ClientId"));
 
                     b.Property<string>("Address")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("BankAccountAccountId")
@@ -192,15 +163,16 @@ namespace CorporateBankingApp.Migrations
                     b.Property<int?>("BankId")
                         .HasColumnType("int");
 
+                    b.Property<string>("BeneficiaryLists")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("City")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("ClientKycId")
                         .HasColumnType("int");
 
                     b.Property<string>("CompanyEmail")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CompanyName")
@@ -208,31 +180,30 @@ namespace CorporateBankingApp.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CompanyPhone")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("FounderName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PostalCode")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("State")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Status")
+                    b.Property<int?>("Status")
                         .HasColumnType("int");
 
-                    b.Property<int>("UserLoginId")
+                    b.Property<int?>("UserLoginId")
                         .HasColumnType("int");
 
                     b.Property<bool>("isActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("isBeneficiaryOutbound")
                         .HasColumnType("bit");
 
                     b.HasKey("ClientId");
@@ -284,6 +255,22 @@ namespace CorporateBankingApp.Migrations
                     b.ToTable("ClientKyc");
                 });
 
+            modelBuilder.Entity("CorporateBankingApp.Models.Counter", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CounterValue")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClientCounter");
+                });
+
             modelBuilder.Entity("CorporateBankingApp.Models.FileDetail", b =>
                 {
                     b.Property<int>("FileId")
@@ -306,6 +293,9 @@ namespace CorporateBankingApp.Migrations
                     b.Property<string>("FilePath")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.HasKey("FileId");
 
@@ -361,7 +351,14 @@ namespace CorporateBankingApp.Migrations
                     b.Property<int>("ReceiverId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("SenderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.HasKey("TransactionId");
@@ -393,21 +390,6 @@ namespace CorporateBankingApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UserLogins");
-                });
-
-            modelBuilder.Entity("BeneficiaryListClient", b =>
-                {
-                    b.HasOne("CorporateBankingApp.Models.BeneficiaryList", null)
-                        .WithMany()
-                        .HasForeignKey("BeneficiaryListsBeneficiaryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CorporateBankingApp.Models.Client", null)
-                        .WithMany()
-                        .HasForeignKey("ListofBeneficiaryInboundClientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("CorporateBankingApp.Models.Bank", b =>
@@ -487,9 +469,7 @@ namespace CorporateBankingApp.Migrations
 
                     b.HasOne("CorporateBankingApp.Models.UserLogin", "UserLogin")
                         .WithMany()
-                        .HasForeignKey("UserLoginId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserLoginId");
 
                     b.Navigation("BankAccount");
 

@@ -13,6 +13,7 @@ namespace CorporateBankingApp.Data
         public DbSet<SuperAdmin> SuperAdmins { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<UserLogin> UserLogins { get; set; }
+        public DbSet<Counter> ClientCounter { get; set; }
         public CorporateBankAppDbContext(DbContextOptions dbContextOptions) : base(dbContextOptions) { }
     }
 }
