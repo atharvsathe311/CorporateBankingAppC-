@@ -9,7 +9,7 @@ using System.Text;
 
 namespace CorporateBankingApp.Service.AuthService
 {
-    public class AuthService
+    public class AuthService : IAuthService
     {
         private readonly CorporateBankAppDbContext _context;
         private readonly IConfiguration _configuration;
@@ -20,43 +20,25 @@ namespace CorporateBankingApp.Service.AuthService
             _configuration = configuration;
         }
 
-        //public bool AddUser(User user)
-        //{
-        //    try
-        //    {
-        //        _context.Users.Add(user);
-        //        _context.SaveChanges();
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return false;
-        //    }
-        //}
-
         public string Login(LoginRequests loginRequests)
         {
             try
             {
                 if (loginRequests.Username != null && loginRequests.Password != null)
                 {
-                    var user = _context.UserLogins.Include("UserType").FirstOrDefault(s => s.LoginUserName == loginRequests.Username && s.PasswordHash == loginRequests.Password);
+                    var user = _context.UserLogins.FirstOrDefault(s => s.LoginUserName == loginRequests.Username && s.PasswordHash == loginRequests.Password);
                     if (user != null)
                     {
                         Console.WriteLine(user);
+                        var client = _context.Clients.FirstOrDefault(s => s.UserLogin.Id == user.Id);
                         var Claims = new List<Claim>
                         {
                             new Claim(JwtRegisteredClaimNames.Sub,_configuration["Jwt:Subject"]),
-                            new Claim("UserId",user.Id.ToString()),
+                            new Claim("UserId",client.ClientId.ToString()),
                             new Claim("UserName",user.LoginUserName),
                             new Claim("UserType", user.UserType.ToString()),
+                            new Claim("UserStatus",client.Status.ToString())
                         };
-
-                        //var roles = user.UserType;
-                        //foreach (var role in roles)
-                        //{
-                        //    Claims.Add(new Claim(ClaimTypes.Role, role.Name));
-                        //}
 
                         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
                         var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -64,7 +46,7 @@ namespace CorporateBankingApp.Service.AuthService
                             _configuration["Jwt:Issuer"],
                             _configuration["Jwt:Audience"],
                             Claims,
-                            expires: DateTime.UtcNow.AddMinutes(10),
+                            expires: DateTime.UtcNow.AddMinutes(30),
                             signingCredentials: signIn);
                         var Token = new JwtSecurityTokenHandler().WriteToken(token);
                         return Token;
@@ -79,27 +61,6 @@ namespace CorporateBankingApp.Service.AuthService
             }
         }
 
-        //public bool AddRole(Role role)
-        //{
-        //    try
-        //    {
-        //        _context.Roles.Add(role);
-        //        _context.SaveChanges();
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return false;
-        //    }
-        //}
-
-        //public List<Role> GetRolesById(IEnumerable<int> roleIds)
-        //{
-        //    if (roleIds == null)
-        //        return new List<Role>();
-
-        //    var roles = _context.Roles.Where(r => roleIds.Contains(r.Id)).ToList();
-        //    return roles;
-        //}
     }
 }
+

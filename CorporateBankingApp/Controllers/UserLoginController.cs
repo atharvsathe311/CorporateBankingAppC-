@@ -11,27 +11,12 @@ namespace CorporateBankingApp.Controllers
     [ApiController]
     public class UserLoginController : ControllerBase
     {
-        private readonly AuthService _authService;
+        private readonly IAuthService _authService;
 
-        public UserLoginController(AuthService authService)
+        public UserLoginController(IAuthService authService)
         {
             _authService = authService;
         }
-
-        // GET: api/<UserLoginController>
-        //[HttpGet]
-        //public string Get()
-        //{
-
-        //    //return ;
-        //}
-
-        // GET api/<UserLoginController>/5
-        //[HttpGet("{id}")]
-        //public string Get(int id)
-        //{
-        //    return "value";
-        //}
 
         //POST api/<UserLoginController>
         [HttpPost]
@@ -40,16 +25,5 @@ namespace CorporateBankingApp.Controllers
             return _authService.Login(loginRequest);
         }
 
-        // PUT api/<UserLoginController>/5
-        //[HttpPut("{id}")]
-        //public void Put(int id, [FromBody] string value)
-        //{
-        //}
-
-        // DELETE api/<UserLoginController>/5
-        //[HttpDelete("{id}")]
-        //public void Delete(int id)
-        //{
-        //}
     }
 }
