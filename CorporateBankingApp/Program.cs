@@ -27,6 +27,7 @@ builder.Services.AddScoped<IClientRepository,ClientRepository>();
 builder.Services.AddScoped<IBankRepository, BankRepository>();
 builder.Services.AddScoped<ISuperAdminRepository, SuperAdminRepository>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddHttpContextAccessor();
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

@@ -11,5 +11,6 @@ namespace CorporateBankingApp.Services
         Task CreateClientAsync(Client client);
         Task UpdateClientAsync(Client client);
         Task DeleteClientAsync(int id);
+        FileDetail Upload(IFormFile file);
     }
 }
