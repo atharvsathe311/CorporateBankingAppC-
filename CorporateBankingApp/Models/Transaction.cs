@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CorporateBankingApp.Models
+﻿namespace CorporateBankingApp.Models
 {
     public class Transaction
     {
@@ -9,6 +7,5 @@ namespace CorporateBankingApp.Models
         public int ReceiverId { get; set; }
         public DateTime DateTime { get; set; }
         public string Amount { get; set; }
-
     }
 }

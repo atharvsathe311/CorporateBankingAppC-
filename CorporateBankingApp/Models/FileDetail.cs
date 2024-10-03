@@ -12,6 +12,7 @@ namespace CorporateBankingApp.Models
         public string FileExtension { get; set; }
         public string FilePath { get; set; }
         public DateTime DateUploaded { get; set; }
+        public StatusEnum Status {  get; set; } 
 
     }
 }

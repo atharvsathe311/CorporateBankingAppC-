@@ -145,8 +145,6 @@ namespace CorporateBankingApp.Controllers
             return Ok(new { message = "KYC documents uploaded successfully." });
 
         }
-<<<<<<< Updated upstream
-=======
 
         [HttpPost("AcceptClient/{id)}")]
         public async Task<ActionResult> OnboardClient(int id)
@@ -154,10 +152,9 @@ namespace CorporateBankingApp.Controllers
             Client client = await _clientService.GetClientByIdAsync(id);
 
             Bank bank = await _bankService.GetBankByIdAsync(1);
-            BankAccount bankAccount = new BankAccount() { Balance = 50000000, BlockedFunds = 0, CreatedAt = DateTime.Now, Transactions = new List<Transaction>() };
+            BankAccount bankAccount = new BankAccount() { Balance = 50000000, BlockedFunds = 0, CreatedAt = DateTime.Now };
             bank.BankAccounts.Add(bankAccount);
             client.BankAccount = bankAccount;
-            client.BeneficiaryLists = new List<BeneficiaryList>();
             client.Status = StatusEnum.Approved;
             _dbContext.SaveChanges();
             return NoContent();
@@ -196,23 +193,13 @@ namespace CorporateBankingApp.Controllers
             return CreatedAtAction(nameof(GetClientById), new { id = client.ClientId }, client);
         }
 
-        [HttpPost("AddBeneficiary")]
-        public async Task<ActionResult> AddBeneficiary(List<Int32> ids)
-        {
+        //[HttpPost("AddBeneficiary")]
+        //public async Task<ActionResult> AddBeneficiary(List<Int32> ids)
+        //{
 
-        }
-
-
+        //}
 
 
 
-
-
-
-
-
-
-
->>>>>>> Stashed changes
     }
 }
