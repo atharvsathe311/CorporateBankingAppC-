@@ -1,9 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CorporateBankingApp.Models
 {
     public class FileDetail
     {
+        [Key]
         public int FileId { get; set; }
         public string FileName { get; set; }
         public string FileExtension { get; set; }

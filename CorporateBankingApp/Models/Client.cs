@@ -19,6 +19,8 @@ namespace CorporateBankingApp.Models
         public ClientKyc ClientKyc { get; set; }
         public DateTime CreatedAt { get; set; }
         public StatusEnum Status { get; set; }
+        [JsonIgnore]
+        [ValidateNever]
         public BankAccount BankAccount { get; set; }
         public List<BeneficiaryList> BeneficiaryLists { get; set; }
         public bool isActive { get; set; }
