@@ -28,12 +28,7 @@ namespace CorporateBankingApp.Repositories
 
         public async Task<Client> GetByIdAsync(int id)
         {
-            return await _context.Clients
-       .Include(c => c.UserLogin)
-       .Include(c => c.ClientKyc)
-       .Include(c => c.BankAccount)
-       .Include(c => c.BeneficiaryLists)
-       .FirstOrDefaultAsync(c => c.ClientId == id);
+            return await _context.Clients.FirstOrDefaultAsync(c => c.ClientId == id);
 
         }
 

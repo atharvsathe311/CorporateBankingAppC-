@@ -64,6 +64,9 @@ namespace CorporateBankingApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
                     b.Property<int>("UserLoginId")
                         .HasColumnType("int");
 
@@ -339,9 +342,6 @@ namespace CorporateBankingApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("BankAccountAccountId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime2");
 
@@ -359,8 +359,6 @@ namespace CorporateBankingApp.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("TransactionId");
-
-                    b.HasIndex("BankAccountAccountId");
 
                     b.ToTable("Transactions");
                 });
@@ -513,23 +511,11 @@ namespace CorporateBankingApp.Migrations
                     b.Navigation("UserLogin");
                 });
 
-            modelBuilder.Entity("CorporateBankingApp.Models.Transaction", b =>
-                {
-                    b.HasOne("CorporateBankingApp.Models.BankAccount", null)
-                        .WithMany("Transactions")
-                        .HasForeignKey("BankAccountAccountId");
-                });
-
             modelBuilder.Entity("CorporateBankingApp.Models.Bank", b =>
                 {
                     b.Navigation("BankAccounts");
 
                     b.Navigation("ClientList");
-                });
-
-            modelBuilder.Entity("CorporateBankingApp.Models.BankAccount", b =>
-                {
-                    b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618
         }

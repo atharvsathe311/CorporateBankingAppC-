@@ -15,6 +15,6 @@ namespace CorporateBankingApp.Models
         public double Balance { get; set; }
         public double BlockedFunds { get; set; }
         public DateTime CreatedAt { get; set; }
-        public List<Transaction> Transactions { get; set; }
+        //public List<Transaction> Transactions { get; set; }
     }
 }

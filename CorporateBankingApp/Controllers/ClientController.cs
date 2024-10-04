@@ -102,7 +102,7 @@ namespace CorporateBankingApp.Controllers
         }
 
         [Authorize]
-        [HttpPost("upload-kyc-documents")]
+        [HttpPost("Upload-Kyc-Documents")]
         public async Task<IActionResult> UploadKYCDocuments(IFormFile PowerOfAttorney, IFormFile BankAccess, IFormFile MOU, ClientKYCDTO clientKyc)
         {
             var user = _httpContextAccessor.HttpContext.User;
@@ -169,14 +169,25 @@ namespace CorporateBankingApp.Controllers
         [HttpPost("NewBeneficiaryOutboundClient")]
         public async Task<ActionResult> NewBeneficiaryOutboundClient([FromForm] OutboundBeneficiaryDTO clientDTO)
         {
-            var client = _mapper.Map<Client>(clientDTO);
+            Client client = new Client();
 
+            client.CompanyName = clientDTO.FullName;
             client.CreatedAt = DateTime.Now;
             client.isActive = true;
 
             Bank bank = await _bankService.GetBankByIdAsync(1);
+           
             BankAccount bankAccount = new BankAccount() { Balance = 50000000, BlockedFunds = 0, CreatedAt = DateTime.Now };
-            bank.BankAccounts.Add(bankAccount);
+
+            if (bank.BankAccounts != null)
+            {
+                bank.BankAccounts.Add(bankAccount);
+                client.BankAccount = bankAccount;
+                client.isBeneficiaryOutbound = true;
+                await _clientService.CreateClientAsync(client);
+                return Ok(client);
+            }
+            bank.BankAccounts = new List<BankAccount> { bankAccount };
             client.BankAccount = bankAccount;
             client.isBeneficiaryOutbound = true;
             await _clientService.CreateClientAsync(client);
@@ -184,20 +195,32 @@ namespace CorporateBankingApp.Controllers
         }
 
         [HttpPost("AddBeneficiary")]
-        public async Task<ActionResult> AddBeneficiary(List<int> ids)
+        public async Task<ActionResult> AddBeneficiary(int ids)
         {
             var user = _httpContextAccessor.HttpContext.User;
-            var clientIdClaim = user.FindFirst("UserId").Value;
+            var clientIdClaim = int.Parse(user.FindFirst("UserId").Value);
 
-            Client client = await _clientService.GetClientByIdAsync(int.Parse(clientIdClaim));
+            //int clientIdClaim = 1;
 
-            client.BeneficiaryLists.AddRange(ids);
+            Client client = await _clientService.GetClientByIdAsync(clientIdClaim);
+
+            if (client == null)
+            {
+                return BadRequest("Null");
+            }
+
+            if (client.BeneficiaryLists != null)
+            {
+                client.BeneficiaryLists.Add(ids);
+                _dbContext.SaveChanges();
+                return Ok("Saved");
+            }
+
+            client.BeneficiaryLists = new List<int> { ids };
             _dbContext.SaveChanges();
             
             return Ok("Saved");
         }
-
-
 
     }
 }

@@ -42,6 +42,24 @@ namespace CorporateBankingApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Transactions",
+                columns: table => new
+                {
+                    TransactionId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SenderId = table.Column<int>(type: "int", nullable: false),
+                    ReceiverId = table.Column<int>(type: "int", nullable: false),
+                    DateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Amount = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Transactions", x => x.TransactionId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "UserLogins",
                 columns: table => new
                 {
@@ -170,7 +188,8 @@ namespace CorporateBankingApp.Migrations
                     BankKycId = table.Column<int>(type: "int", nullable: true),
                     UserLoginId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    isActive = table.Column<bool>(type: "bit", nullable: false)
+                    isActive = table.Column<bool>(type: "bit", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -259,30 +278,6 @@ namespace CorporateBankingApp.Migrations
                         principalColumn: "Id");
                 });
 
-            migrationBuilder.CreateTable(
-                name: "Transactions",
-                columns: table => new
-                {
-                    TransactionId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    SenderId = table.Column<int>(type: "int", nullable: false),
-                    ReceiverId = table.Column<int>(type: "int", nullable: false),
-                    DateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Amount = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    BankAccountAccountId = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Transactions", x => x.TransactionId);
-                    table.ForeignKey(
-                        name: "FK_Transactions_BankAccounts_BankAccountAccountId",
-                        column: x => x.BankAccountAccountId,
-                        principalTable: "BankAccounts",
-                        principalColumn: "AccountId");
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_BankAccounts_BankId",
                 table: "BankAccounts",
@@ -357,11 +352,6 @@ namespace CorporateBankingApp.Migrations
                 name: "IX_SuperAdmins_UserLoginId",
                 table: "SuperAdmins",
                 column: "UserLoginId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Transactions_BankAccountAccountId",
-                table: "Transactions",
-                column: "BankAccountAccountId");
         }
 
         /// <inheritdoc />
@@ -380,10 +370,10 @@ namespace CorporateBankingApp.Migrations
                 name: "Transactions");
 
             migrationBuilder.DropTable(
-                name: "ClientKyc");
+                name: "BankAccounts");
 
             migrationBuilder.DropTable(
-                name: "BankAccounts");
+                name: "ClientKyc");
 
             migrationBuilder.DropTable(
                 name: "Banks");

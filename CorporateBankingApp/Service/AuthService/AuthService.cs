@@ -2,7 +2,6 @@
 using CorporateBankingApp.Models.AuthModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -24,43 +23,71 @@ namespace CorporateBankingApp.Service.AuthService
         {
             try
             {
-                if (loginRequests.Username != null && loginRequests.Password != null)
+                if (string.IsNullOrEmpty(loginRequests.Username) || string.IsNullOrEmpty(loginRequests.Password))
                 {
-                    var user = _context.UserLogins.FirstOrDefault(s => s.LoginUserName == loginRequests.Username && s.PasswordHash == loginRequests.Password);
-                    if (user != null)
-                    {
-                        Console.WriteLine(user);
-                        var client = _context.Clients.FirstOrDefault(s => s.UserLogin.Id == user.Id);
-                        var Claims = new List<Claim>
-                        {
-                            new Claim(JwtRegisteredClaimNames.Sub,_configuration["Jwt:Subject"]),
-                            new Claim("UserId",client.ClientId.ToString()),
-                            new Claim("UserName",user.LoginUserName),
-                            new Claim("UserType", user.UserType.ToString()),
-                            new Claim("UserStatus",client.Status.ToString())
-                        };
-
-                        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-                        var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-                        var token = new JwtSecurityToken(
-                            _configuration["Jwt:Issuer"],
-                            _configuration["Jwt:Audience"],
-                            Claims,
-                            expires: DateTime.UtcNow.AddMinutes(30),
-                            signingCredentials: signIn);
-                        var Token = new JwtSecurityTokenHandler().WriteToken(token);
-                        return Token;
-                    }
-                    throw new Exception("Invalid Credentials");
+                    throw new Exception("Empty credentials");
                 }
-                throw new Exception("Empty Credentials");
+
+                // Check for user in the database
+                var user = _context.UserLogins.FirstOrDefault(s => s.LoginUserName == loginRequests.Username && s.PasswordHash == loginRequests.Password);
+                if (user == null)
+                {
+                    throw new Exception("Invalid credentials");
+                }
+
+                // Initialize claims for JWT
+                var claims = new List<Claim>
+                {
+                    new Claim("UserName", user.LoginUserName),
+                    new Claim("UserId", user.Id.ToString())
+                };
+
+                // Role-specific checks
+                if (user.UserType == Models.UserType.Client)
+                {
+                    var client = _context.Clients.FirstOrDefault(s => s.UserLogin.Id == user.Id);
+                    if (client != null)
+                    {
+                        claims.Add(new Claim("UserType", "Client"));
+                        claims.Add(new Claim("UserStatus",client.Status.ToString()));
+                    }
+                }
+                else if (user.UserType == Models.UserType.Bank)
+                {
+                    var bank = _context.Banks.FirstOrDefault(s => s.UserLogin.Id == user.Id);
+                    if (bank != null)
+                    {
+                        claims.Add(new Claim("UserType", "Bank"));
+                    }
+                }
+                else
+                {
+                    var admin = _context.SuperAdmins.FirstOrDefault(s => s.UserLogin.Id == user.Id);
+                    if (admin != null)
+                    {
+                        claims.Add(new Claim("UserType", "SuperAdmin"));
+                    }
+                }
+
+                // Generate JWT token
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+                var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                var token = new JwtSecurityToken(
+                    issuer: _configuration["Jwt:Issuer"],
+                    audience: _configuration["Jwt:Audience"],
+                    claims: claims,
+                    expires: DateTime.UtcNow.AddMinutes(30),
+                    signingCredentials: signIn
+                );
+
+                // Return the token
+                return new JwtSecurityTokenHandler().WriteToken(token);
             }
             catch (Exception ex)
             {
-                return ex.Message;
+                // Log error for internal debugging (not exposing full message to users)
+                return "Login failed: " + ex.Message;
             }
         }
-
     }
 }
-

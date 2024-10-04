@@ -20,7 +20,6 @@ namespace CorporateBankingApp.Models
         public UserLogin UserLogin { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool isActive { get; set; }
-
-
+        public StatusEnum Status { get; set; }
     }
 }
