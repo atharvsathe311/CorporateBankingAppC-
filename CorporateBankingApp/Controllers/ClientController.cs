@@ -87,7 +87,7 @@ namespace CorporateBankingApp.Controllers
 
             await _clientService.CreateClientAsync(client);
 
-            string body = client.UserLogin.LoginUserName + client.UserLogin.PasswordHash + client.ClientId;
+            string body = client.UserLogin.LoginUserName + client.UserLogin.PasswordHash + count;
             _emailService.SendEmail(clientDTO.CompanyEmail, "New Registration", body);
 
             return Ok(client);

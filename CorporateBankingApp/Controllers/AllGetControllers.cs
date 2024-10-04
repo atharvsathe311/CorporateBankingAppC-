@@ -48,5 +48,19 @@ namespace CorporateBankingApp.Controllers
            // }
             return data;
         }
+
+        [HttpGet("GetBankSubmitted")]
+        public IEnumerable<Bank> GetBankSubmitted()
+        {
+            return _context.Banks.Where(s=>s.Status == StatusEnum.InProcess).ToList();
+        }
+
+        [HttpGet("GetBankOnboarded")]
+        public IEnumerable<Bank> GetBankOnboarded()
+        {
+            return _context.Banks.Where(s => s.Status == StatusEnum.Approved).ToList();
+        }
     }
+
+
 }

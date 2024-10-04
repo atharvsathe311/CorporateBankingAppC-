@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CorporateBankingApp.Models;
 using CorporateBankingApp.Services;
+using CorporateBankingApp.DTO;
+using AutoMapper;
 
 namespace CorporateBankingApp.Controllers
 {
@@ -11,10 +13,14 @@ namespace CorporateBankingApp.Controllers
     public class BankController : ControllerBase
     {
         private readonly IBankService _bankService;
+        private readonly IMapper _mapper;
+        private readonly IClientService _clientService;
 
-        public BankController(IBankService bankService)
+        public BankController(IBankService bankService, IMapper mapper, IClientService clientService)
         {
             _bankService = bankService;
+            _mapper = mapper;
+            _clientService = clientService;
         }
 
         [HttpGet]
@@ -33,8 +39,23 @@ namespace CorporateBankingApp.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> CreateBank(Bank bank)
+        public async Task<ActionResult> CreateBank(BankDTO bankDto)
         {
+            var bank = _mapper.Map<Bank>(bankDto);
+
+            int count = await _clientService.GetCounter();
+
+            bank.Status = StatusEnum.Submitted;
+            UserLogin userLogin = new UserLogin()
+            {
+                LoginUserName = bankDto.BankName.Substring(0, 4) + count,
+                PasswordHash = "Admin@123",
+                UserType = UserType.Bank,
+            };
+            bank.UserLogin = userLogin;
+            bank.CreatedAt = DateTime.Now;
+            bank.isActive = true;
+
             await _bankService.CreateBankAsync(bank);
             return CreatedAtAction(nameof(GetBankById), new { id = bank.BankId }, bank);
         }
