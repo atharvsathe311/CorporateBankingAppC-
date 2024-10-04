@@ -199,7 +199,7 @@ namespace CorporateBankingApp.Controllers
         {
             IEnumerable<Transaction> transactions = await _context.Transactions.Where(s => s.Status == StatusEnum.Rejected && (s.SenderBankId == id || s.ReceiverBankId == id)).ToListAsync();
             double balance = 0;
-            Bank bank = await _context.Banks.Where(s => s.BankId == id).Include("ClientLists").Include("BankAccounts").FirstOrDefaultAsync();
+            Bank bank = await _context.Banks.Where(s => s.BankId == id).Include("BankAccounts").FirstOrDefaultAsync();
             
             foreach(BankAccount bankAccount in bank.BankAccounts)
             {
@@ -218,18 +218,34 @@ namespace CorporateBankingApp.Controllers
         [HttpGet("GetDashBoardSuperAdmin")]
         public async Task<ActionResult> GetDashBoardSuperAdmin()
         {
-            double balance = 0;
+
             IEnumerable<Bank> banks = await _context.Banks.ToListAsync();
             IEnumerable<Client> clientsPending = await _context.Clients.Where(s=>s.Status == StatusEnum.Submitted || s.Status == StatusEnum.InProcess).ToListAsync();
             IEnumerable<Transaction> transactions = await _context.Transactions.Where(s => s.Status == StatusEnum.Submitted).ToListAsync();
+
             var data = new
             {
                 Banks = banks.Count(),
-                ClientsPending = clientsPending.Count(),
-                Transactions = transactions.Count(),
+                ClientsPending = clientsPending.Count(),             
+                Transactions = transactions.Count()
             };
             return Ok(data);
         }
+
+
+
+
+
+        // SUPERADMIN MODULE WORKING
+
+        [HttpGet("GetKycDetailsBank/{id}")]
+        public async Task<BankKyc> GetKycDetailsBank(int id)
+        {
+            var bank =  await _context.Banks.Where(s=>s.BankId == id).Include("BankKyc").FirstOrDefaultAsync();
+            return bank.BankKyc;
+        }
+
+
     }
 
 

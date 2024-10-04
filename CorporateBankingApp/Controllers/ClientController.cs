@@ -66,7 +66,6 @@ namespace CorporateBankingApp.Controllers
                 return BadRequest("Client data is required.");
             }
 
-            // Use the bankId from the URL instead of clientDTO.BankId
             Bank bank = await _bankService.GetBankByIdAsync(clientDTO.BankId);
             if (bank == null)
             {
@@ -88,7 +87,7 @@ namespace CorporateBankingApp.Controllers
             client.CreatedAt = DateTime.Now;
             client.Status = StatusEnum.Submitted;
             client.isActive = true;
-            client.BankId = clientDTO.BankId; // Set the BankId from the URL
+            client.BankId = clientDTO.BankId;
             await _clientService.CreateClientAsync(client);
 
             if (client.ClientId != 0) // Ensure ClientId is set
@@ -113,16 +112,10 @@ namespace CorporateBankingApp.Controllers
             return Ok(client);
         }
 
-
-
         [Authorize]
         [HttpPost("Upload-Kyc-Documents")]
         public async Task<IActionResult> UploadKYCDocuments(BankKYCDTO bankKyc)
         {
-            //var user = _httpContextAccessor.HttpContext.User;
-            //var clientIdClaim = user.FindFirst("UserId").Value;
-
-
             Bank bank = await _bankService.GetBankByIdAsync(bankKyc.BankId);
 
             //if (bankKyc.LicenseAgreement == null || bankKyc.FinancialStatement == null || bankKyc.AnnualReport == null)
@@ -180,6 +173,66 @@ namespace CorporateBankingApp.Controllers
 
         }
 
+        [HttpPost("Upload-Kyc-Documents-Client")]
+        public async Task<IActionResult> UploadKYCDocumentsClient(ClientKYCDTO clientKycDto)
+        {
+            Client client = await _clientService.GetClientByIdAsync(clientKycDto.ClientId);
+
+            //if (bankKyc.LicenseAgreement == null || bankKyc.FinancialStatement == null || bankKyc.AnnualReport == null)
+            //{
+            //    return BadRequest("All documents are required.");
+            //}
+
+            //var uploadResult = await UploadToCloudinary(bankKyc.LicenseAgreement);
+            //if (uploadResult == null) return StatusCode(500, "License Agreement upload failed");
+
+            //var financialUploadResult = await UploadToCloudinary(bankKyc.FinancialStatement);
+            //if (financialUploadResult == null) return StatusCode(500, "Financial Statement upload failed");
+
+            //var reportUploadResult = await UploadToCloudinary(bankKyc.AnnualReport);
+            //if (reportUploadResult == null) return StatusCode(500, "Annual Report upload failed");
+
+            //// Process further or return success
+            ////return Ok(new
+            ////{
+
+            ////});
+
+            //bank.BankKyc = new BankKyc()
+            //{
+            //    LicenseNumber = bankKyc.LicenseNumber,
+            //    TaxpayerIdentificationNumber = bankKyc.TINNumber,
+            //    LicenseRegulatorApprovalsOrLicenseAgreement = new FileDetail()
+            //    {
+            //        FileName = bank.BankName + bank.BankId + "LRA",
+            //        FileExtension = ".jpg",
+            //        FilePath = uploadResult.SecureUrl.AbsoluteUri,
+            //        DateUploaded = DateTime.Now,
+            //        Status = StatusEnum.Approved
+            //    },
+            //    FinancialStatements = new FileDetail()
+            //    {
+            //        FileName = bank.BankName + bank.BankId + "FinancialStatements",
+            //        FileExtension = ".jpg",
+            //        FilePath = financialUploadResult.SecureUrl.AbsoluteUri,
+            //        DateUploaded = DateTime.Now,
+            //        Status = StatusEnum.Approved
+            //    },
+            //    AnnualReports = new FileDetail()
+            //    {
+            //        FileName = bank.BankName + bank.BankId + "AnnualReports",
+            //        FileExtension = ".jpg",
+            //        FilePath = reportUploadResult.SecureUrl.AbsoluteUri,
+            //        DateUploaded = DateTime.Now,
+            //        Status = StatusEnum.Approved
+            //    }
+            //};
+            client.Status = StatusEnum.InProcess;
+            _dbContext.SaveChanges();
+            return Ok(new { message = "KYC documents uploaded successfully." });
+
+        }
+
         //private async Task<ImageUploadResult> UploadToCloudinary(IFormFile file)
         //{
         //    var uploadResult = new ImageUploadResult();
@@ -198,7 +251,27 @@ namespace CorporateBankingApp.Controllers
         //    return uploadResult;
         //}
 
-        [HttpPost("AcceptClient/{id)}")]
+        [HttpGet("AcceptBank/{id}")]
+        public async Task<ActionResult> AcceptBank(int id)
+        {
+            Bank bank = await _bankService.GetBankByIdAsync(id);
+            bank.Status = StatusEnum.Approved;
+            _dbContext.SaveChanges();
+            return Ok(bank);
+        }
+
+        [HttpGet("RejectBank/{id}")]
+        public async Task<ActionResult> RejectBank(int id)
+        {
+            Bank bank = await _bankService.GetBankByIdAsync(id);
+            bank.Status = StatusEnum.Rejected;
+            _dbContext.SaveChanges();
+            return Ok(bank);
+        }
+
+
+
+        [HttpGet("AcceptClient/{id)}")]
         public async Task<ActionResult> OnboardClient(int id)
         {
             Client client = await _clientService.GetClientByIdAsync(id);

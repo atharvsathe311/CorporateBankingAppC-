@@ -1,6 +1,6 @@
 ﻿namespace CorporateBankingApp.DTO
 {
-    public interface BankKYCDTO
+    public class BankKYCDTO
     {
         public int BankId { get; set; }
         public string LicenseNumber { get; set; }
