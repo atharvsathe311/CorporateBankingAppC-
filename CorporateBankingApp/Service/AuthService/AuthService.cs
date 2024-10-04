@@ -40,6 +40,10 @@ namespace CorporateBankingApp.Service.AuthService
                 var claims = new List<Claim>
                 {
                     new Claim("UserName", user.LoginUserName),
+<<<<<<< Updated upstream
+=======
+                    
+>>>>>>> Stashed changes
                 };
 
                 // Role-specific checks
@@ -61,7 +65,10 @@ namespace CorporateBankingApp.Service.AuthService
                         claims.Add(new Claim("UserId", bank.BankId.ToString()));
                         claims.Add(new Claim("UserType", "Bank"));
                         claims.Add(new Claim("UserStatus", bank.Status.ToString()));
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
                     }
                 }
                 else
