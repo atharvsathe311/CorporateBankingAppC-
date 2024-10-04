@@ -14,6 +14,5 @@ namespace CorporateBankingApp.DTO
         public string CompanyEmail { get; set; }
         public string CompanyPhone { get; set; }
         public int BankId { get; set; }
-
     }
 }

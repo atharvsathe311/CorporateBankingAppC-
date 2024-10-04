@@ -15,8 +15,8 @@ namespace CorporateBankingApp.Models
         public string City { get; set; }
         public string BankEmail { get; set; }
         public BankKyc? BankKyc { get; set; }
-        public List<int>? ClientList { get; set; }
-        public List<BankAccount>? BankAccounts { get; set; }
+        public List<int>? ClientList { get; set; } = new List<int>();
+        public List<BankAccount>? BankAccounts { get; set; } = new List<BankAccount>();
         public UserLogin UserLogin { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool isActive { get; set; }

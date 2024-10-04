@@ -48,7 +48,7 @@ namespace CorporateBankingApp.Controllers
                     return Ok(superAdmin);
 
                 case "Bank": // Bank
-                    var bank = _context.Banks.Include(c=>c.UserLogin).Include(c => c.ClientList)
+                    var bank = _context.Banks.Include(c=>c.UserLogin)
                         .FirstOrDefault(b => b.BankId == int.Parse(userId));
                     if (bank == null) return NotFound();
                     return Ok(bank);

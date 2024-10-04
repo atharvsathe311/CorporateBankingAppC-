@@ -6,8 +6,8 @@ using CorporateBankingApp.Service;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using CorporateBankingApp.Data;
-using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
+//using CloudinaryDotNet;
+//using CloudinaryDotNet.Actions;
 
 namespace CorporateBankingApp.Controllers
 {
@@ -21,9 +21,9 @@ namespace CorporateBankingApp.Controllers
         private readonly IBankService _bankService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly CorporateBankAppDbContext _dbContext;
-        private readonly Cloudinary _cloudinary;
+        //private readonly Cloudinary _cloudinary;
 
-        public ClientController(IClientService clientService, IEmailService emailService, IMapper mapper, IBankService bankService, IHttpContextAccessor httpContextAccessor, CorporateBankAppDbContext corporateBankAppDbContext, Cloudinary cloudinary)
+        public ClientController(IClientService clientService, IEmailService emailService, IMapper mapper, IBankService bankService, IHttpContextAccessor httpContextAccessor, CorporateBankAppDbContext corporateBankAppDbContext)
         {
             _clientService = clientService;
             _emailService = emailService;
@@ -31,7 +31,7 @@ namespace CorporateBankingApp.Controllers
             _bankService = bankService;
             _httpContextAccessor = httpContextAccessor;
             _dbContext = corporateBankAppDbContext;
-            _cloudinary = cloudinary;
+            //_cloudinary = cloudinary;
 
         }
 
@@ -61,30 +61,59 @@ namespace CorporateBankingApp.Controllers
         [HttpPost]
         public async Task<ActionResult> CreateClient([FromBody] NewClientDTO clientDTO)
         {
+            if (clientDTO == null)
+            {
+                return BadRequest("Client data is required.");
+            }
+
+            // Use the bankId from the URL instead of clientDTO.BankId
             Bank bank = await _bankService.GetBankByIdAsync(clientDTO.BankId);
+            if (bank == null)
+            {
+                return NotFound($"Bank with ID {clientDTO.BankId} not found.");
+            }
+
             var client = _mapper.Map<Client>(clientDTO);
 
             int count = await _clientService.GetCounter();
 
-            UserLogin userLogin = new UserLogin();
-            userLogin.LoginUserName = clientDTO.CompanyName.Substring(0, 4) + count;
-            userLogin.PasswordHash = "Admin@123";
-            userLogin.UserType = UserType.Client;
+            UserLogin userLogin = new UserLogin
+            {
+                LoginUserName = clientDTO.CompanyName.Substring(0, 4) + count,
+                PasswordHash = "Admin@123",
+                UserType = UserType.Client
+            };
 
             client.UserLogin = userLogin;
             client.CreatedAt = DateTime.Now;
             client.Status = StatusEnum.Submitted;
             client.isActive = true;
-            client.BankId = clientDTO.BankId;
+            client.BankId = clientDTO.BankId; // Set the BankId from the URL
             await _clientService.CreateClientAsync(client);
 
-            bank.ClientList.Add(client.ClientId);
+            if (client.ClientId != 0) // Ensure ClientId is set
+            {
+                bank.ClientList.Add(client.ClientId);
+            }
+            else
+            {
+                return BadRequest("Failed to create client; ClientId is not set.");
+            }
 
-            string body = client.UserLogin.LoginUserName + client.UserLogin.PasswordHash;
-            _emailService.SendEmail(clientDTO.CompanyEmail, "New Registration", body);
+            if (!string.IsNullOrEmpty(clientDTO.CompanyEmail))
+            {
+                string body = $"{client.UserLogin.LoginUserName} {client.UserLogin.PasswordHash}";
+                _emailService.SendEmail(clientDTO.CompanyEmail, "New Registration", body);
+            }
+            else
+            {
+                return BadRequest("Company email is required.");
+            }
 
             return Ok(client);
         }
+
+
 
         [Authorize]
         [HttpPost("Upload-Kyc-Documents")]
@@ -151,23 +180,23 @@ namespace CorporateBankingApp.Controllers
 
         }
 
-        private async Task<ImageUploadResult> UploadToCloudinary(IFormFile file)
-        {
-            var uploadResult = new ImageUploadResult();
-            if (file.Length > 0)
-            {
-                using (var stream = file.OpenReadStream())
-                {
-                    var uploadParams = new ImageUploadParams()
-                    {
-                        File = new FileDescription(file.FileName, stream)
-                    };
+        //private async Task<ImageUploadResult> UploadToCloudinary(IFormFile file)
+        //{
+        //    var uploadResult = new ImageUploadResult();
+        //    if (file.Length > 0)
+        //    {
+        //        using (var stream = file.OpenReadStream())
+        //        {
+        //            var uploadParams = new ImageUploadParams()
+        //            {
+        //                File = new FileDescription(file.FileName, stream)
+        //            };
 
-                    uploadResult = await _cloudinary.UploadAsync(uploadParams);
-                }
-            }
-            return uploadResult;
-        }
+        //            uploadResult = await _cloudinary.UploadAsync(uploadParams);
+        //        }
+        //    }
+        //    return uploadResult;
+        //}
 
         [HttpPost("AcceptClient/{id)}")]
         public async Task<ActionResult> OnboardClient(int id)
