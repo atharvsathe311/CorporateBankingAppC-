@@ -9,5 +9,7 @@
         public string Amount { get; set; }
         public StatusEnum Status { get; set; }
         public string Remarks { get; set; }
+        public int SenderBankId { get; set; }
+        public int ReceiverBankId { get; set; }
     }
 }

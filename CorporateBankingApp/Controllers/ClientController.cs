@@ -41,18 +41,7 @@ namespace CorporateBankingApp.Controllers
             return Ok(clients);
         }
 
-        [HttpGet("GetAllSubmitted")]
-        public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllSubmittedClients()
-        {
-            var clients = await _clientService.GetAllClientsAsync();
-            var clientsToReturn = new List<ViewSubmittedClientDTO>();
-            foreach (var client in clients)
-            {
-                var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
-                clientsToReturn.Add(submittedClient);
-            }
-            return Ok(clientsToReturn);
-        }
+
 
         //[HttpGet("SendEmail")]
         //public void SendEmail()
@@ -69,14 +58,14 @@ namespace CorporateBankingApp.Controllers
         //}
 
         [HttpPost]
-        public async Task<ActionResult> CreateClient([FromForm] NewClientDTO clientDTO)
+        public async Task<ActionResult> CreateClient([FromBody] NewClientDTO clientDTO)
         {
             var client = _mapper.Map<Client>(clientDTO);
 
             int count = await _clientService.GetCounter();
 
             UserLogin userLogin = new UserLogin();
-            userLogin.LoginUserName = clientDTO.CompanyName.Substring(0, 4) + client.ClientId;
+            userLogin.LoginUserName = clientDTO.CompanyName.Substring(0, 4) + count;
             userLogin.PasswordHash = "Admin@123";
             userLogin.UserType = UserType.Client;
 
