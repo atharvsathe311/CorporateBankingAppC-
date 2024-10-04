@@ -25,6 +25,7 @@ namespace CorporateBankingApp.Models
         public List<int>? BeneficiaryLists { get; set; }
         public bool isActive { get; set; }
         public bool isBeneficiaryOutbound { get; set; } = false;
+        public int BankId { get; set; }
         
     }
 }

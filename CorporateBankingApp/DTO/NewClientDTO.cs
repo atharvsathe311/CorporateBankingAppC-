@@ -13,6 +13,7 @@ namespace CorporateBankingApp.DTO
         public string PostalCode { get; set; }
         public string CompanyEmail { get; set; }
         public string CompanyPhone { get; set; }
+        public int BankId { get; set; }
 
     }
 }

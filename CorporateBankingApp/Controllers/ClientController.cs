@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using CorporateBankingApp.Models;
 using CorporateBankingApp.Services;
 using CorporateBankingApp.DTO;
@@ -8,7 +6,8 @@ using CorporateBankingApp.Service;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using CorporateBankingApp.Data;
-using System;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 
 namespace CorporateBankingApp.Controllers
 {
@@ -22,8 +21,9 @@ namespace CorporateBankingApp.Controllers
         private readonly IBankService _bankService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly CorporateBankAppDbContext _dbContext;
+        private readonly Cloudinary _cloudinary;
 
-        public ClientController(IClientService clientService, IEmailService emailService, IMapper mapper, IBankService bankService, IHttpContextAccessor httpContextAccessor, CorporateBankAppDbContext corporateBankAppDbContext)
+        public ClientController(IClientService clientService, IEmailService emailService, IMapper mapper, IBankService bankService, IHttpContextAccessor httpContextAccessor, CorporateBankAppDbContext corporateBankAppDbContext, Cloudinary cloudinary)
         {
             _clientService = clientService;
             _emailService = emailService;
@@ -31,6 +31,7 @@ namespace CorporateBankingApp.Controllers
             _bankService = bankService;
             _httpContextAccessor = httpContextAccessor;
             _dbContext = corporateBankAppDbContext;
+            _cloudinary = cloudinary;
 
         }
 
@@ -60,6 +61,7 @@ namespace CorporateBankingApp.Controllers
         [HttpPost]
         public async Task<ActionResult> CreateClient([FromBody] NewClientDTO clientDTO)
         {
+            Bank bank = await _bankService.GetBankByIdAsync(clientDTO.BankId);
             var client = _mapper.Map<Client>(clientDTO);
 
             int count = await _clientService.GetCounter();
@@ -73,62 +75,98 @@ namespace CorporateBankingApp.Controllers
             client.CreatedAt = DateTime.Now;
             client.Status = StatusEnum.Submitted;
             client.isActive = true;
-
+            client.BankId = clientDTO.BankId;
             await _clientService.CreateClientAsync(client);
 
-            string body = client.UserLogin.LoginUserName + client.UserLogin.PasswordHash + count;
+            bank.ClientList.Add(client.ClientId);
+
+            string body = client.UserLogin.LoginUserName + client.UserLogin.PasswordHash;
             _emailService.SendEmail(clientDTO.CompanyEmail, "New Registration", body);
 
             return Ok(client);
         }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateClient(int id, Client client)
-        {
-            if (id != client.ClientId) return BadRequest();
-            await _clientService.UpdateClientAsync(client);
-            return NoContent();
-        }
-
         [Authorize]
         [HttpPost("Upload-Kyc-Documents")]
-        public async Task<IActionResult> UploadKYCDocuments(IFormFile PowerOfAttorney, IFormFile BankAccess, IFormFile MOU, ClientKYCDTO clientKyc)
+        public async Task<IActionResult> UploadKYCDocuments(BankKYCDTO bankKyc)
         {
-            var user = _httpContextAccessor.HttpContext.User;
-            var clientIdClaim = user.FindFirst("UserId").Value;
+            //var user = _httpContextAccessor.HttpContext.User;
+            //var clientIdClaim = user.FindFirst("UserId").Value;
 
-            Client client = await _clientService.GetClientByIdAsync(Int32.Parse(clientIdClaim));
 
-            if (PowerOfAttorney == null || BankAccess == null || MOU == null)
-            {
-                return BadRequest("One or more files are missing.");
-            }
+            Bank bank = await _bankService.GetBankByIdAsync(bankKyc.BankId);
 
-            var uploadResultPowerOfAttorney = _clientService.Upload(PowerOfAttorney);
-            var uploadResultBankAccess = _clientService.Upload(BankAccess);
-            var uploadResultMOU = _clientService.Upload(MOU);
+            //if (bankKyc.LicenseAgreement == null || bankKyc.FinancialStatement == null || bankKyc.AnnualReport == null)
+            //{
+            //    return BadRequest("All documents are required.");
+            //}
 
-            if (uploadResultPowerOfAttorney.FileName == "Extension is not valid" || uploadResultBankAccess.FileName == "Extension is not valid" || uploadResultMOU.FileName == "Extension is not valid")
-            {
-                return BadRequest("One or more files have invalid extensions.");
-            }
+            //var uploadResult = await UploadToCloudinary(bankKyc.LicenseAgreement);
+            //if (uploadResult == null) return StatusCode(500, "License Agreement upload failed");
 
-            if (uploadResultPowerOfAttorney.FileName == "Max size can't exceed 5MB" || uploadResultBankAccess.FileName == "Max size can't exceed 5MB" || uploadResultMOU.FileName == "Max size can't exceed 5MB")
-            {
-                return BadRequest("One or more files exceeded the size limit.");
-            }
+            //var financialUploadResult = await UploadToCloudinary(bankKyc.FinancialStatement);
+            //if (financialUploadResult == null) return StatusCode(500, "Financial Statement upload failed");
 
-            client.ClientKyc.CINNumber = clientKyc.CINNumber;
-            client.ClientKyc.PanNumber = clientKyc.PANNumber;
-            client.ClientKyc.MOU = uploadResultMOU;
-            client.ClientKyc.BankAccess = uploadResultBankAccess;
-            client.ClientKyc.PowerOfAttorney = uploadResultPowerOfAttorney;
+            //var reportUploadResult = await UploadToCloudinary(bankKyc.AnnualReport);
+            //if (reportUploadResult == null) return StatusCode(500, "Annual Report upload failed");
 
-            client.Status = StatusEnum.InProcess;
+            //// Process further or return success
+            ////return Ok(new
+            ////{
 
+            ////});
+
+            //bank.BankKyc = new BankKyc()
+            //{
+            //    LicenseNumber = bankKyc.LicenseNumber,
+            //    TaxpayerIdentificationNumber = bankKyc.TINNumber,
+            //    LicenseRegulatorApprovalsOrLicenseAgreement = new FileDetail()
+            //    {
+            //        FileName = bank.BankName + bank.BankId + "LRA",
+            //        FileExtension = ".jpg",
+            //        FilePath = uploadResult.SecureUrl.AbsoluteUri,
+            //        DateUploaded = DateTime.Now,
+            //        Status = StatusEnum.Approved
+            //    },
+            //    FinancialStatements = new FileDetail()
+            //    {
+            //        FileName = bank.BankName + bank.BankId + "FinancialStatements",
+            //        FileExtension = ".jpg",
+            //        FilePath = financialUploadResult.SecureUrl.AbsoluteUri,
+            //        DateUploaded = DateTime.Now,
+            //        Status = StatusEnum.Approved
+            //    },
+            //    AnnualReports = new FileDetail()
+            //    {
+            //        FileName = bank.BankName + bank.BankId + "AnnualReports",
+            //        FileExtension = ".jpg",
+            //        FilePath = reportUploadResult.SecureUrl.AbsoluteUri,
+            //        DateUploaded = DateTime.Now,
+            //        Status = StatusEnum.Approved
+            //    }
+            //};
+            bank.Status = StatusEnum.InProcess;
             _dbContext.SaveChanges();
             return Ok(new { message = "KYC documents uploaded successfully." });
 
+        }
+
+        private async Task<ImageUploadResult> UploadToCloudinary(IFormFile file)
+        {
+            var uploadResult = new ImageUploadResult();
+            if (file.Length > 0)
+            {
+                using (var stream = file.OpenReadStream())
+                {
+                    var uploadParams = new ImageUploadParams()
+                    {
+                        File = new FileDescription(file.FileName, stream)
+                    };
+
+                    uploadResult = await _cloudinary.UploadAsync(uploadParams);
+                }
+            }
+            return uploadResult;
         }
 
         [HttpPost("AcceptClient/{id)}")]
@@ -165,7 +203,7 @@ namespace CorporateBankingApp.Controllers
             client.isActive = true;
 
             Bank bank = await _bankService.GetBankByIdAsync(1);
-           
+
             BankAccount bankAccount = new BankAccount() { Balance = 50000000, BlockedFunds = 0, CreatedAt = DateTime.Now };
 
             if (bank.BankAccounts != null)
@@ -207,7 +245,7 @@ namespace CorporateBankingApp.Controllers
 
             client.BeneficiaryLists = new List<int> { ids };
             _dbContext.SaveChanges();
-            
+
             return Ok("Saved");
         }
 

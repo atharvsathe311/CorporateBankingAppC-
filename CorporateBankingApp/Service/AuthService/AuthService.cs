@@ -1,4 +1,5 @@
 ﻿using CorporateBankingApp.Data;
+using CorporateBankingApp.Models;
 using CorporateBankingApp.Models.AuthModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -39,7 +40,6 @@ namespace CorporateBankingApp.Service.AuthService
                 var claims = new List<Claim>
                 {
                     new Claim("UserName", user.LoginUserName),
-                    new Claim("UserId", user.Id.ToString())
                 };
 
                 // Role-specific checks
@@ -48,6 +48,7 @@ namespace CorporateBankingApp.Service.AuthService
                     var client = _context.Clients.FirstOrDefault(s => s.UserLogin.Id == user.Id);
                     if (client != null)
                     {
+                        claims.Add(new Claim("UserId", client.ClientId.ToString()));
                         claims.Add(new Claim("UserType", "Client"));
                         claims.Add(new Claim("UserStatus",client.Status.ToString()));
                     }
@@ -57,7 +58,10 @@ namespace CorporateBankingApp.Service.AuthService
                     var bank = _context.Banks.FirstOrDefault(s => s.UserLogin.Id == user.Id);
                     if (bank != null)
                     {
+                        claims.Add(new Claim("UserId", bank.BankId.ToString()));
                         claims.Add(new Claim("UserType", "Bank"));
+                        claims.Add(new Claim("UserStatus", bank.Status.ToString()));
+
                     }
                 }
                 else
@@ -65,6 +69,7 @@ namespace CorporateBankingApp.Service.AuthService
                     var admin = _context.SuperAdmins.FirstOrDefault(s => s.UserLogin.Id == user.Id);
                     if (admin != null)
                     {
+                        claims.Add(new Claim("UserId", admin.AdminId.ToString()));
                         claims.Add(new Claim("UserType", "SuperAdmin"));
                     }
                 }

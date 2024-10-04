@@ -7,7 +7,7 @@ namespace CorporateBankingApp.Models
     {
         public int BankKycId { get; set; }
         public string LicenseNumber { get; set; }
-        public FileDetail TaxpayerIdentificationNumber { get; set; }
+        public string TaxpayerIdentificationNumber { get; set; }
         public FileDetail LicenseRegulatorApprovalsOrLicenseAgreement { get; set; }
         public FileDetail FinancialStatements{ get; set; }
         public FileDetail AnnualReports { get; set; }
