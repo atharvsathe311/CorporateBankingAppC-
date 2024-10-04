@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CorporateBankingApp.Migrations
 {
     [DbContext(typeof(CorporateBankAppDbContext))]
-    [Migration("20241004184059_ver1")]
-    partial class ver1
+    [Migration("20241004212839_v1")]
+    partial class v1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -107,7 +107,7 @@ namespace CorporateBankingApp.Controllers
             return Ok(clientsToReturn);
         }
 
-        [HttpGet("GetAllSubmitted")]
+        [HttpGet("GetAllSubmittedClients")]
         public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllSubmittedClients()
         {
             var clients = _context.Clients.Where(s => s.Status == StatusEnum.Submitted || s.Status == StatusEnum.InProcess).ToList();
@@ -245,7 +245,12 @@ namespace CorporateBankingApp.Controllers
             return bank.BankKyc;
         }
 
-
+        [HttpGet("GetKycDetailsClinet/{id}")]
+        public async Task<ClientKyc> GetKycDetailsClient(int id)
+        {
+            var client = await _context.Clients.Where(s => s.ClientId == id).Include("ClientKyc").FirstOrDefaultAsync();
+            return client.ClientKyc;
+        }
     }
 
 

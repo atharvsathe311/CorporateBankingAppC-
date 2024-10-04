@@ -28,6 +28,7 @@ namespace CorporateBankingApp.Repositories
 
         public async Task AddAsync(SuperAdmin superAdmin)
         {
+            superAdmin.UserLogin.PasswordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(superAdmin.UserLogin.PasswordHash);
             await _context.SuperAdmins.AddAsync(superAdmin);
             await _context.SaveChangesAsync();
         }

@@ -79,7 +79,7 @@ namespace CorporateBankingApp.Controllers
             UserLogin userLogin = new UserLogin
             {
                 LoginUserName = clientDTO.CompanyName.Substring(0, 4) + count,
-                PasswordHash = "Admin@123",
+                PasswordHash = BCrypt.Net.BCrypt.EnhancedHashPassword("Admin@123"),
                 UserType = UserType.Client
             };
 

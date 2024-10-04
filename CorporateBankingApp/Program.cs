@@ -24,11 +24,13 @@ builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IBankService, BankService>();
 builder.Services.AddScoped<ISuperAdminService, SuperAdminService>();
+builder.Services.AddScoped<IChangePasswordService, ChangePasswordService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IClientRepository,ClientRepository>();
 builder.Services.AddScoped<IBankRepository, BankRepository>();
 builder.Services.AddScoped<ISuperAdminRepository, SuperAdminRepository>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddCors(options =>
 {

@@ -29,9 +29,13 @@ namespace CorporateBankingApp.Service.AuthService
                     throw new Exception("Empty credentials");
                 }
 
-                // Check for user in the database
-                var user = _context.UserLogins.FirstOrDefault(s => s.LoginUserName == loginRequests.Username && s.PasswordHash == loginRequests.Password);
+                var user = _context.UserLogins.FirstOrDefault(s => s.LoginUserName == loginRequests.Username);
                 if (user == null)
+                {
+                    throw new Exception("Invalid credentials");
+                }
+
+                if (!BCrypt.Net.BCrypt.EnhancedVerify(loginRequests.Password, user.PasswordHash))
                 {
                     throw new Exception("Invalid credentials");
                 }
@@ -50,7 +54,7 @@ namespace CorporateBankingApp.Service.AuthService
                     {
                         claims.Add(new Claim("UserId", client.ClientId.ToString()));
                         claims.Add(new Claim("UserType", "Client"));
-                        claims.Add(new Claim("UserStatus",client.Status.ToString()));
+                        claims.Add(new Claim("UserStatus", client.Status.ToString()));
                     }
                 }
                 else if (user.UserType == Models.UserType.Bank)
@@ -89,7 +93,6 @@ namespace CorporateBankingApp.Service.AuthService
             }
             catch (Exception ex)
             {
-                // Log error for internal debugging (not exposing full message to users)
                 return "Login failed: " + ex.Message;
             }
         }
