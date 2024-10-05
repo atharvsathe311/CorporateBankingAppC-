@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CloudinaryDotNet.Core;
 using CorporateBankingApp.Data;
 using CorporateBankingApp.DTO;
 using CorporateBankingApp.Models;
@@ -57,11 +58,49 @@ namespace CorporateBankingApp.Controllers
             return data;
         }
 
+        //[HttpGet("GetBankSubmitted")]
+        //public IEnumerable<Bank> GetBankSubmitted()
+        //{
+        //    return _context.Banks.Where(s => s.Status == StatusEnum.InProcess).ToList();
+        //}
+
         [HttpGet("GetBankSubmitted")]
-        public IEnumerable<Bank> GetBankSubmitted()
+        public IActionResult GetBankSubmitted(int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            return _context.Banks.Where(s => s.Status == StatusEnum.InProcess).ToList();
+            IQueryable<Bank> query = _context.Banks.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s =>( s.Status == StatusEnum.InProcess || s.Status == StatusEnum.Submitted) &&
+                    (s.BankName.Contains(searchTerm) ||
+                     s.BankEmail.Contains(searchTerm)));
+            }
+            else
+            {
+                query = query.Where(s => s.Status == StatusEnum.InProcess || s.Status == StatusEnum.Submitted);
+            }
+
+            var totalCount = query.Count();
+
+            var banks = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(b => new
+                {
+                    b.BankId,
+                    b.BankName,
+                    b.BankEmail,
+                    b.Status
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                Banks = banks,
+                TotalCount = totalCount
+            });
         }
+
 
         [HttpGet("GetBankOnboarded")]
         public IEnumerable<Bank> GetBankOnboarded()
@@ -76,22 +115,134 @@ namespace CorporateBankingApp.Controllers
         }
 
 
+        //[HttpGet("GetTransaction")]
+        //public IEnumerable<Transaction> GetTransaction()
+        //{
+        //    return _context.Transactions.Where(s => s.Status == StatusEnum.Submitted).ToList();
+        //}
+
         [HttpGet("GetTransaction")]
-        public IEnumerable<Transaction> GetTransaction()
+        public IActionResult GetTransaction(int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            return _context.Transactions.Where(s => s.Status == StatusEnum.Submitted).ToList();
+            IQueryable<Transaction> query = _context.Transactions.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => s.Status == StatusEnum.Submitted);
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => (s.TransactionId.ToString().Contains(searchTerm) ||
+                           s.SenderId.ToString().Contains(searchTerm) ||
+                           s.ReceiverId.ToString().Contains(searchTerm)) && s.Status == StatusEnum.Submitted);
+
+            }
+
+            var totalCount = query.Count();
+
+            var transactions = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(t => new
+                {
+                    t.TransactionId,
+                    t.SenderId,
+                    t.ReceiverId,
+                    t.DateTime,
+                    t.Amount,
+                    t.Status,
+                    t.Remarks
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                Transactions = transactions,
+                TotalCount = totalCount
+            });
         }
 
         [HttpGet("GetTransactionApproved")]
-        public IEnumerable<Transaction> GetTransactionApproved()
+        public IActionResult GetTransactionApproved(int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            return _context.Transactions.Where(s => s.Status == StatusEnum.Approved).ToList();
+            IQueryable<Transaction> query = _context.Transactions.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => s.Status == StatusEnum.Approved);
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => (s.TransactionId.ToString().Contains(searchTerm) ||
+                           s.SenderId.ToString().Contains(searchTerm) ||
+                           s.ReceiverId.ToString().Contains(searchTerm)) && s.Status == StatusEnum.Approved);
+            }
+
+            var totalCount = query.Count();
+
+            var transactions = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(t => new
+                {
+                    t.TransactionId,
+                    t.SenderId,
+                    t.ReceiverId,
+                    t.DateTime,
+                    t.Amount,
+                    t.Status,
+                    t.Remarks
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                Transactions = transactions,
+                TotalCount = totalCount
+            });
         }
 
         [HttpGet("GetTransactionRejected")]
-        public IEnumerable<Transaction> GetTransactionRejected()
+        public IActionResult GetTransactionRejected(int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            return _context.Transactions.Where(s => s.Status == StatusEnum.Rejected).ToList();
+            IQueryable<Transaction> query = _context.Transactions.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => s.Status == StatusEnum.Rejected);
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => (s.TransactionId.ToString().Contains(searchTerm) ||
+                           s.SenderId.ToString().Contains(searchTerm) ||
+                           s.ReceiverId.ToString().Contains(searchTerm)) && s.Status == StatusEnum.Rejected);
+            }
+
+            var totalCount = query.Count();
+
+            var transactions = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(t => new
+                {
+                    t.TransactionId,
+                    t.SenderId,
+                    t.ReceiverId,
+                    t.DateTime,
+                    t.Amount,
+                    t.Status,
+                    t.Remarks
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                Transactions = transactions,
+                TotalCount = totalCount
+            });
         }
 
         [HttpGet("GetAllApprovedClient")]
