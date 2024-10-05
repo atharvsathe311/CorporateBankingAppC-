@@ -89,6 +89,7 @@ namespace CorporateBankingApp.Controllers
             client.Status = StatusEnum.Submitted;
             client.isActive = true;
             client.BankId = clientDTO.BankId;
+            client.BeneficiaryLists = new List<int>() { };
             await _clientService.CreateClientAsync(client);
 
             if (client.ClientId != 0) // Ensure ClientId is set
@@ -297,7 +298,7 @@ namespace CorporateBankingApp.Controllers
         }
 
         [HttpPost("NewBeneficiaryOutboundClient")]
-        public async Task<ActionResult> NewBeneficiaryOutboundClient([FromForm] OutboundBeneficiaryDTO clientDTO)
+        public async Task<ActionResult> NewBeneficiaryOutboundClient([FromBody] OutboundBeneficiaryDTO clientDTO)
         {
             Client client = new Client();
 
@@ -337,13 +338,13 @@ namespace CorporateBankingApp.Controllers
 
             if (client.BeneficiaryLists != null)
             {
-                client.BeneficiaryLists.AddRange(addBeneficiaryDTO.Ids);
+                client.BeneficiaryLists.Add(addBeneficiaryDTO.Ids);
                 _dbContext.SaveChanges();
                 return Ok("Saved");
             }
 
             client.BeneficiaryLists = new List<int>() { };
-            client.BeneficiaryLists.AddRange(addBeneficiaryDTO.Ids);
+            client.BeneficiaryLists.Add(addBeneficiaryDTO.Ids);
             _dbContext.SaveChanges();
 
             return Ok("Saved");

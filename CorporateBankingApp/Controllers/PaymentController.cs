@@ -35,13 +35,17 @@ namespace CorporateBankingApp.Controllers
 
             transaction.SenderId = paymentDTO.SenderId;
             transaction.ReceiverId = paymentDTO.ReceiverId;
+            transaction.SenderBankId = sender.BankId;
+            transaction.ReceiverBankId = receiver.BankId;
             transaction.Amount = paymentDTO.Amount;
             transaction.DateTime = DateTime.Now;
             transaction.Status = StatusEnum.Submitted;
+            transaction.Remarks = paymentDTO.Remarks;
 
             if (sender.Balance >= amount + 500)
             {
                 sender.Balance -= amount;
+                sender.BlockedFunds += amount;
                 await _clientService.AddTransaction(transaction);
                 _corporateBankAppDbContext.SaveChanges();
 
@@ -49,6 +53,7 @@ namespace CorporateBankingApp.Controllers
             }
             transaction.Status = StatusEnum.Rejected;
             transaction.Remarks = "Transaction Rejected Due to Insufficient Funds";
+            await _clientService.AddTransaction(transaction);
             return "Transaction Rejected Due to Insufficient Funds";
 
         }
@@ -86,13 +91,13 @@ namespace CorporateBankingApp.Controllers
                 transaction.Amount = paymentDTO.Amount;
                 transaction.DateTime = DateTime.Now;
                 transaction.Status = StatusEnum.Submitted;
+                transaction.Remarks = paymentDTO.Remarks;
 
                 if (sender.Balance >= amount + 500)
                 {
                     sender.Balance -= amount;
                     sender.BlockedFunds += amount;
                     await _clientService.AddTransaction(transaction);
-                    transaction.Remarks = "Transaction Added";
                     continue;
                 }
                 transaction.Status = StatusEnum.Rejected;
@@ -109,15 +114,37 @@ namespace CorporateBankingApp.Controllers
             {
                 var transaction = await _transactionService.GetTransactionByIdAsync(id);
                 BankAccount sender = await _clientService.GetClientBankAccount(transaction.SenderId);
+
+                Console.WriteLine();
+                Console.WriteLine(); Console.WriteLine();
+                Console.WriteLine(); Console.WriteLine();
+                Console.WriteLine(); Console.WriteLine();
+                Console.WriteLine(); Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine(transaction.Remarks);
+
+                if (transaction.Remarks.Length > 6)
+                {
+                    if (transaction.Remarks.Substring(0, 6) == "Salary")
+                    {
+                        transaction.Status = StatusEnum.Approved;
+                        sender.BlockedFunds -= Double.Parse(transaction.Amount);
+                        transaction.Remarks = transaction.Remarks + "Payment Sucess";
+                        continue;
+                    }
+
+                }
+
                 BankAccount receiver = await _clientService.GetClientBankAccount(transaction.ReceiverId);
                 transaction.Status = StatusEnum.Approved;
                 double amount = Double.Parse(transaction.Amount);
+
                 sender.BlockedFunds -= amount;
                 receiver.Balance += amount;
-                transaction.Remarks = "Payment Sucess";
+                transaction.Remarks = transaction.Remarks + "Payment Sucess";
             }
             _corporateBankAppDbContext.SaveChanges();
-            return "";
+            return "Done";
         }
 
         [HttpPost("SalaryPayment")]
@@ -131,11 +158,11 @@ namespace CorporateBankingApp.Controllers
                 double amount = Double.Parse(salaryDto.Amount);
 
                 transaction.SenderId = salaryDto.SenderId;
-                transaction.ReceiverId = 0;
+                transaction.ReceiverId = salaryDto.ReceiverId;
                 transaction.Amount = salaryDto.Amount;
                 transaction.DateTime = DateTime.Now;
                 transaction.Status = StatusEnum.Submitted;
-                transaction.Remarks = salaryDto.ReceiverBankAccountNumber + salaryDto.ReceiverBankAccountIFSCCode;
+                transaction.Remarks = salaryDto.Remarks +" "+ salaryDto.Name;
 
                 if (sender.Balance >= amount + 500)
                 {

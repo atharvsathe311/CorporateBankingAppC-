@@ -10,10 +10,10 @@
 
     public class SalaryDTO
     {
+        public string Name { get; set; }
         public string Amount { get; set; }
         public int SenderId { get; set; }
-        public int ReceiverBankAccountNumber { get; set; }
-        public string ReceiverBankAccountIFSCCode { get; set; }
+        public int ReceiverId { get; set; }
         public string Remarks { get; set; }
     }
 }

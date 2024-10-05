@@ -3,6 +3,6 @@
     public class AddBeneficiaryDTO
     {
         public int Id { get; set; }
-        public List<int> Ids { get; set; }
+        public int Ids { get; set; }
     }
 }

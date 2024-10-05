@@ -298,18 +298,37 @@ namespace CorporateBankingApp.Controllers
         [HttpGet("GetClientForBeneficiary")]
         public async Task<List<GetBeneficiaryDTO>> GetClientForBeneficiary()
         {
-            // Fetch clients with Status == Approved and select only clientId and companyName
+
             var clients = await _context.Clients
                 .Where(s => s.Status == StatusEnum.Approved)
-                .Select(c => new GetBeneficiaryDTO
-                {
-                    ClientId = c.ClientId,
-                    CompanyName = c.CompanyName
-                })
                 .ToListAsync();
 
-            var approvedClients = _context.Clients.Where(s => s.Status == StatusEnum.Approved).ToList();
-            return clients;
+
+            var beneficiaryDTOs = clients.Select(c => new GetBeneficiaryDTO
+            {
+                ClientId = c.ClientId,
+                CompanyName = c.CompanyName
+            }).ToList();
+
+            return beneficiaryDTOs;
+        }
+
+
+        [HttpGet("GetBeneficiaryOfClient/{id}")]
+        public async Task<List<Client>> GetBeneficiaryOfClient(int id)
+        {
+
+            var clients = await _context.Clients
+                    .Where(s => s.ClientId == id).FirstOrDefaultAsync();
+
+            List<Client> listClient = new List<Client>();
+            foreach (var client in clients.BeneficiaryLists)
+            {
+                Client tempClient = _context.Clients.Include("BankAccount").Where(s=>s.ClientId == client).FirstOrDefault();
+                listClient.Add(tempClient);
+            }
+
+            return listClient;
         }
     }
 
