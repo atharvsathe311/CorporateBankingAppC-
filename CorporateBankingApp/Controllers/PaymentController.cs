@@ -199,16 +199,16 @@ namespace CorporateBankingApp.Controllers
         }
 
         [HttpPost("BulkPaymentRejected")]
-        public async Task<string> BulkPaymentRejected([FromBody] List<RejectTransactionDTO> ids)
+        public async Task<string> BulkPaymentRejected([FromBody] RejectTransactionDTO ids)
         {
-            foreach (RejectTransactionDTO rejectTransaction in ids)
+            foreach (int rejectTransaction in ids.TransactionId)
             {
-                var transaction = await _transactionService.GetTransactionByIdAsync(rejectTransaction.TransactionId);
+                var transaction = await _transactionService.GetTransactionByIdAsync(rejectTransaction);
                 BankAccount sender = await _clientService.GetClientBankAccount(transaction.SenderId);
 
                 sender.BlockedFunds -= Double.Parse(transaction.Amount);
                 sender.Balance += Double.Parse(transaction.Amount);
-                transaction.Remarks = transaction.Remarks + " " + rejectTransaction.TransactionRemark ;
+                transaction.Remarks = transaction.Remarks + " " + ids.TransactionRemark ;
                 transaction.Status = StatusEnum.Rejected;
             }
             _corporateBankAppDbContext.SaveChanges();

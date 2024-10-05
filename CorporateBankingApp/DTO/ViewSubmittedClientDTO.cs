@@ -9,6 +9,6 @@ namespace CorporateBankingApp.DTO
         public string CompanyName { get; set; }
         public string CompanyEmail { get; set; }
         public string CompanyPhone { get; set; }
-        public StatusEnum Status { get; set; }
+        public StatusEnum? Status { get; set; }
     }
 }

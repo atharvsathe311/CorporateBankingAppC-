@@ -267,18 +267,59 @@ namespace CorporateBankingApp.Controllers
             return Ok(clientsToReturn);
         }
 
+        //[HttpGet("GetAllSubmittedClients")]
+        //public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllSubmittedClients()
+        //{
+        //    var clients = _context.Clients.Where(s => s.Status == StatusEnum.Submitted || s.Status == StatusEnum.InProcess).ToList();
+        //    var clientsToReturn = new List<ViewSubmittedClientDTO>();
+        //    foreach (var client in clients)
+        //    {
+        //        var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
+        //        clientsToReturn.Add(submittedClient);
+        //    }
+        //    return Ok(clientsToReturn);
+        //}
+
         [HttpGet("GetAllSubmittedClients")]
-        public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllSubmittedClients()
+        public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllSubmittedClients(int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            var clients = _context.Clients.Where(s => s.Status == StatusEnum.Submitted || s.Status == StatusEnum.InProcess).ToList();
-            var clientsToReturn = new List<ViewSubmittedClientDTO>();
-            foreach (var client in clients)
+            IQueryable<Client> query = _context.Clients.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
-                clientsToReturn.Add(submittedClient);
+                query = query.Where(s => s.Status == StatusEnum.Submitted || s.Status == StatusEnum.InProcess);
             }
-            return Ok(clientsToReturn);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s =>
+                    (s.CompanyName.Contains(searchTerm) ||
+                    s.CompanyEmail.Contains(searchTerm) ||
+                    s.CompanyPhone.Contains(searchTerm)) && (s.Status == StatusEnum.Submitted || s.Status == StatusEnum.InProcess));
+            }
+
+            var totalCount = query.Count();
+
+            var clients = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(c => new ViewSubmittedClientDTO
+                {
+                    ClientId = c.ClientId,
+                    CompanyName = c.CompanyName,
+                    CompanyEmail = c.CompanyEmail,
+                    CompanyPhone = c.CompanyPhone,
+                    Status = c.Status
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                Clients = clients,
+                TotalCount = totalCount
+            });
         }
+
 
         [HttpGet("GetAllRejectedClient")]
         public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllRejectedClient()
