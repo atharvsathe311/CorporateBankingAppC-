@@ -6,6 +6,7 @@ using CorporateBankingApp.Service;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using CorporateBankingApp.Data;
+using System.Collections.Generic;
 //using CloudinaryDotNet;
 //using CloudinaryDotNet.Actions;
 
@@ -271,7 +272,7 @@ namespace CorporateBankingApp.Controllers
 
 
 
-        [HttpGet("AcceptClient/{id)}")]
+        [HttpGet("AcceptClient/{id}")]
         public async Task<ActionResult> OnboardClient(int id)
         {
             Client client = await _clientService.GetClientByIdAsync(id);
@@ -282,10 +283,10 @@ namespace CorporateBankingApp.Controllers
             client.BankAccount = bankAccount;
             client.Status = StatusEnum.Approved;
             _dbContext.SaveChanges();
-            return NoContent();
+            return Ok(client);
         }
 
-        [HttpPost("RejectClient/{id)}")]
+        [HttpPost("RejectClient/{id}")]
         public async Task<ActionResult> RejectClient(int id)
         {
             Client client = await _clientService.GetClientByIdAsync(id);
@@ -324,14 +325,10 @@ namespace CorporateBankingApp.Controllers
         }
 
         [HttpPost("AddBeneficiary")]
-        public async Task<ActionResult> AddBeneficiary(int ids)
+        public async Task<ActionResult> AddBeneficiary([FromBody] AddBeneficiaryDTO addBeneficiaryDTO) 
         {
-            var user = _httpContextAccessor.HttpContext.User;
-            var clientIdClaim = int.Parse(user.FindFirst("UserId").Value);
 
-            //int clientIdClaim = 1;
-
-            Client client = await _clientService.GetClientByIdAsync(clientIdClaim);
+            Client client = await _clientService.GetClientByIdAsync(addBeneficiaryDTO.Id);
 
             if (client == null)
             {
@@ -340,12 +337,13 @@ namespace CorporateBankingApp.Controllers
 
             if (client.BeneficiaryLists != null)
             {
-                client.BeneficiaryLists.Add(ids);
+                client.BeneficiaryLists.AddRange(addBeneficiaryDTO.Ids);
                 _dbContext.SaveChanges();
                 return Ok("Saved");
             }
 
-            client.BeneficiaryLists = new List<int> { ids };
+            client.BeneficiaryLists = new List<int>() { };
+            client.BeneficiaryLists.AddRange(addBeneficiaryDTO.Ids);
             _dbContext.SaveChanges();
 
             return Ok("Saved");

@@ -6,6 +6,7 @@ using CorporateBankingApp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Any;
+using System.Collections;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -154,6 +155,26 @@ namespace CorporateBankingApp.Controllers
             return _context.Transactions.Where(s => s.Status == StatusEnum.Rejected && (s.SenderBankId == id || s.ReceiverBankId == id)).ToList();
         }
 
+        [HttpGet("GetTransactionClient/{id}")]
+        public IEnumerable<Transaction> GetTransactionClient(int id)
+        {
+            return _context.Transactions.Where(s => s.Status == StatusEnum.Submitted && (s.SenderId == id)).ToList();
+        }
+
+
+        [HttpGet("GetTransactionApprovedClient/{id}")]
+        public IEnumerable<Transaction> GetTransactionApprovedClient(int id)
+        {
+            return _context.Transactions.Where(s => s.Status == StatusEnum.Approved && (s.SenderId == id || s.ReceiverId == id)).ToList();
+        }
+
+        [HttpGet("GetTransactionRejectedClient/{id}")]
+        public IEnumerable<Transaction> GetTransactionRejectedClient(int id)
+        {
+            return _context.Transactions.Where(s => s.Status == StatusEnum.Rejected && (s.SenderId == id)).ToList();
+        }
+
+
         [HttpGet("GetAllApprovedClientBank/{id}")]
         public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllApprovedClientBank(int id)
         {
@@ -161,8 +182,8 @@ namespace CorporateBankingApp.Controllers
             var clientsToReturn = new List<ViewSubmittedClientDTO>();
             foreach (var client in clients)
             {
-                    var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
-                    clientsToReturn.Add(submittedClient);
+                var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
+                clientsToReturn.Add(submittedClient);
             }
             return Ok(clientsToReturn);
         }
@@ -174,8 +195,8 @@ namespace CorporateBankingApp.Controllers
             var clientsToReturn = new List<ViewSubmittedClientDTO>();
             foreach (var client in clients)
             {
-                    var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
-                    clientsToReturn.Add(submittedClient);
+                var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
+                clientsToReturn.Add(submittedClient);
             }
             return Ok(clientsToReturn);
         }
@@ -187,8 +208,8 @@ namespace CorporateBankingApp.Controllers
             var clientsToReturn = new List<ViewSubmittedClientDTO>();
             foreach (var client in clients)
             {
-                    var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
-                    clientsToReturn.Add(submittedClient);
+                var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
+                clientsToReturn.Add(submittedClient);
             }
             return Ok(clientsToReturn);
         }
@@ -200,8 +221,8 @@ namespace CorporateBankingApp.Controllers
             IEnumerable<Transaction> transactions = await _context.Transactions.Where(s => s.Status == StatusEnum.Rejected && (s.SenderBankId == id || s.ReceiverBankId == id)).ToListAsync();
             double balance = 0;
             Bank bank = await _context.Banks.Where(s => s.BankId == id).Include("BankAccounts").FirstOrDefaultAsync();
-            
-            foreach(BankAccount bankAccount in bank.BankAccounts)
+
+            foreach (BankAccount bankAccount in bank.BankAccounts)
             {
                 balance += bankAccount.Balance;
             }
@@ -220,14 +241,32 @@ namespace CorporateBankingApp.Controllers
         {
 
             IEnumerable<Bank> banks = await _context.Banks.ToListAsync();
-            IEnumerable<Client> clientsPending = await _context.Clients.Where(s=>s.Status == StatusEnum.Submitted || s.Status == StatusEnum.InProcess).ToListAsync();
+            IEnumerable<Client> clientsPending = await _context.Clients.Where(s => s.Status == StatusEnum.Submitted || s.Status == StatusEnum.InProcess).ToListAsync();
             IEnumerable<Transaction> transactions = await _context.Transactions.Where(s => s.Status == StatusEnum.Submitted).ToListAsync();
 
             var data = new
             {
                 Banks = banks.Count(),
-                ClientsPending = clientsPending.Count(),             
+                ClientsPending = clientsPending.Count(),
                 Transactions = transactions.Count()
+            };
+            return Ok(data);
+        }
+
+        [HttpGet("GetDashBoardClient/{id}")]
+        public async Task<ActionResult> GetDashBoardClient(int id)
+        {
+            Client client = await _context.Clients.Include("BankAccount").SingleOrDefaultAsync(s => s.ClientId == id);
+
+            IEnumerable<Transaction> transactionspend = await _context.Transactions.Where(s => s.Status == StatusEnum.Submitted && s.SenderId == id).ToListAsync();
+            IEnumerable<Transaction> transactionsrej = await _context.Transactions.Where(s => s.Status == StatusEnum.Rejected && s.SenderId == id).ToListAsync();
+
+            var data = new
+            {
+                MyBalance = client.BankAccount.Balance,
+                FundsBlocked = client.BankAccount.BlockedFunds,
+                TransactionsPending = transactionspend.Count(),
+                TransactionsRejected = transactionsrej.Count()
             };
             return Ok(data);
         }
@@ -241,15 +280,36 @@ namespace CorporateBankingApp.Controllers
         [HttpGet("GetKycDetailsBank/{id}")]
         public async Task<BankKyc> GetKycDetailsBank(int id)
         {
-            var bank =  await _context.Banks.Where(s=>s.BankId == id).Include("BankKyc").FirstOrDefaultAsync();
+            var bank = await _context.Banks.Where(s => s.BankId == id).Include("BankKyc").FirstOrDefaultAsync();
             return bank.BankKyc;
         }
 
-        [HttpGet("GetKycDetailsClinet/{id}")]
+        [HttpGet("GetKycDetailsClient/{id}")]
         public async Task<ClientKyc> GetKycDetailsClient(int id)
         {
             var client = await _context.Clients.Where(s => s.ClientId == id).Include("ClientKyc").FirstOrDefaultAsync();
             return client.ClientKyc;
+        }
+
+
+
+        //Client Module 
+
+        [HttpGet("GetClientForBeneficiary")]
+        public async Task<List<GetBeneficiaryDTO>> GetClientForBeneficiary()
+        {
+            // Fetch clients with Status == Approved and select only clientId and companyName
+            var clients = await _context.Clients
+                .Where(s => s.Status == StatusEnum.Approved)
+                .Select(c => new GetBeneficiaryDTO
+                {
+                    ClientId = c.ClientId,
+                    CompanyName = c.CompanyName
+                })
+                .ToListAsync();
+
+            var approvedClients = _context.Clients.Where(s => s.Status == StatusEnum.Approved).ToList();
+            return clients;
         }
     }
 
