@@ -280,14 +280,22 @@ namespace CorporateBankingApp.Controllers
         [HttpGet("GetKycDetailsBank/{id}")]
         public async Task<BankKyc> GetKycDetailsBank(int id)
         {
-            var bank = await _context.Banks.Where(s => s.BankId == id).Include("BankKyc").FirstOrDefaultAsync();
+            var bank = await _context.Banks.Where(s => s.BankId == id).Include(b=>b.BankKyc).ThenInclude(b=>b.LicenseRegulatorApprovalsOrLicenseAgreement).Include(c=>c.BankKyc).ThenInclude(c=>c.FinancialStatements).Include(d => d.BankKyc).ThenInclude(d => d.AnnualReports).FirstOrDefaultAsync();
             return bank.BankKyc;
         }
 
         [HttpGet("GetKycDetailsClient/{id}")]
         public async Task<ClientKyc> GetKycDetailsClient(int id)
         {
-            var client = await _context.Clients.Where(s => s.ClientId == id).Include("ClientKyc").FirstOrDefaultAsync();
+            var client = await _context.Clients
+    .Where(s => s.ClientId == id)
+    .Include(c => c.ClientKyc) 
+        .ThenInclude(c => c.PowerOfAttorney) 
+    .Include(c => c.ClientKyc) 
+        .ThenInclude(c => c.BankAccess)
+    .Include(c => c.ClientKyc)
+        .ThenInclude(c => c.MOU)
+    .FirstOrDefaultAsync();
             return client.ClientKyc;
         }
 

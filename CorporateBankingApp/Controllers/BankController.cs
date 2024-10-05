@@ -5,6 +5,7 @@ using CorporateBankingApp.Models;
 using CorporateBankingApp.Services;
 using CorporateBankingApp.DTO;
 using AutoMapper;
+using CorporateBankingApp.Service;
 
 namespace CorporateBankingApp.Controllers
 {
@@ -15,12 +16,14 @@ namespace CorporateBankingApp.Controllers
         private readonly IBankService _bankService;
         private readonly IMapper _mapper;
         private readonly IClientService _clientService;
+        private readonly IEmailService _emailService;
 
-        public BankController(IBankService bankService, IMapper mapper, IClientService clientService)
+        public BankController(IBankService bankService, IMapper mapper, IClientService clientService,IEmailService emailService)
         {
             _bankService = bankService;
             _mapper = mapper;
             _clientService = clientService;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -57,6 +60,7 @@ namespace CorporateBankingApp.Controllers
             bank.isActive = true;
 
             await _bankService.CreateBankAsync(bank);
+            _emailService.SendNewRegistrationMail(bankDto.BankEmail, bankDto.BankName, userLogin.LoginUserName, "Admin@123");
             return CreatedAtAction(nameof(GetBankById), new { id = bank.BankId }, bank);
         }
 

@@ -92,6 +92,8 @@ namespace CorporateBankingApp.Controllers
                 transaction.DateTime = DateTime.Now;
                 transaction.Status = StatusEnum.Submitted;
                 transaction.Remarks = paymentDTO.Remarks;
+                transaction.SenderBankId = sender.BankId;
+                transaction.ReceiverBankId = receiver.BankId;
 
                 if (sender.Balance >= amount + 500)
                 {
@@ -101,7 +103,7 @@ namespace CorporateBankingApp.Controllers
                     continue;
                 }
                 transaction.Status = StatusEnum.Rejected;
-                transaction.Remarks =  "Transaction Rejected Due to Insufficient Funds";
+                transaction.Remarks = "Transaction Rejected Due to Insufficient Funds";
             }
             _corporateBankAppDbContext.SaveChanges();
             return "";
@@ -162,7 +164,9 @@ namespace CorporateBankingApp.Controllers
                 transaction.Amount = salaryDto.Amount;
                 transaction.DateTime = DateTime.Now;
                 transaction.Status = StatusEnum.Submitted;
-                transaction.Remarks = salaryDto.Remarks +" "+ salaryDto.Name;
+                transaction.Remarks = salaryDto.Remarks + " " + salaryDto.Name;
+                transaction.SenderBankId = sender.BankId;
+                transaction.ReceiverBankId = 99999;
 
                 if (sender.Balance >= amount + 500)
                 {
@@ -192,6 +196,23 @@ namespace CorporateBankingApp.Controllers
             }
             _corporateBankAppDbContext.SaveChanges();
             return "";
+        }
+
+        [HttpPost("BulkPaymentRejected")]
+        public async Task<string> BulkPaymentRejected([FromBody] List<RejectTransactionDTO> ids)
+        {
+            foreach (RejectTransactionDTO rejectTransaction in ids)
+            {
+                var transaction = await _transactionService.GetTransactionByIdAsync(rejectTransaction.TransactionId);
+                BankAccount sender = await _clientService.GetClientBankAccount(transaction.SenderId);
+
+                sender.BlockedFunds -= Double.Parse(transaction.Amount);
+                sender.Balance += Double.Parse(transaction.Amount);
+                transaction.Remarks = transaction.Remarks + " " + rejectTransaction.TransactionRemark ;
+                transaction.Status = StatusEnum.Rejected;
+            }
+            _corporateBankAppDbContext.SaveChanges();
+            return "Done";
         }
 
     }
