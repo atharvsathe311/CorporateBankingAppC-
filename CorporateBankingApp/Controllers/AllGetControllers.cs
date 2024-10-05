@@ -136,7 +136,10 @@ namespace CorporateBankingApp.Controllers
             {
                 query = query.Where(s => (s.TransactionId.ToString().Contains(searchTerm) ||
                            s.SenderId.ToString().Contains(searchTerm) ||
-                           s.ReceiverId.ToString().Contains(searchTerm)) && s.Status == StatusEnum.Submitted);
+                           s.ReceiverId.ToString().Contains(searchTerm) || 
+                           s.Amount.ToString().Contains(searchTerm) ||
+                           s.Remarks.ToString().Contains(searchTerm)) && 
+                           s.Status == StatusEnum.Submitted);
 
             }
 
@@ -177,8 +180,10 @@ namespace CorporateBankingApp.Controllers
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 query = query.Where(s => (s.TransactionId.ToString().Contains(searchTerm) ||
-                           s.SenderId.ToString().Contains(searchTerm) ||
-                           s.ReceiverId.ToString().Contains(searchTerm)) && s.Status == StatusEnum.Approved);
+                            s.SenderId.ToString().Contains(searchTerm) ||
+                           s.ReceiverId.ToString().Contains(searchTerm) ||
+                           s.Amount.ToString().Contains(searchTerm) ||
+                           s.Remarks.ToString().Contains(searchTerm)) && s.Status == StatusEnum.Approved);
             }
 
             var totalCount = query.Count();
@@ -218,8 +223,10 @@ namespace CorporateBankingApp.Controllers
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 query = query.Where(s => (s.TransactionId.ToString().Contains(searchTerm) ||
-                           s.SenderId.ToString().Contains(searchTerm) ||
-                           s.ReceiverId.ToString().Contains(searchTerm)) && s.Status == StatusEnum.Rejected);
+                            s.SenderId.ToString().Contains(searchTerm) ||
+                           s.ReceiverId.ToString().Contains(searchTerm) ||
+                           s.Amount.ToString().Contains(searchTerm) ||
+                           s.Remarks.ToString().Contains(searchTerm)) && s.Status == StatusEnum.Rejected);
             }
 
             var totalCount = query.Count();
