@@ -4,6 +4,7 @@ using CorporateBankingApp.Data;
 using CorporateBankingApp.DTO;
 using CorporateBankingApp.Models;
 using CorporateBankingApp.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Any;
@@ -339,7 +340,7 @@ namespace CorporateBankingApp.Controllers
             return Ok(clientsToReturn);
         }
 
-        [HttpGet("GetAllSubmittedBank/{id}")]
+        [HttpGet("GetAllSubmittedClientBank/{id}")]
         public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllSubmittedBank(int id)
         {
             var clients = _context.Clients.Where(s => (s.Status == StatusEnum.Submitted || s.Status == StatusEnum.InProcess) && s.BankId == id).ToList();
@@ -454,12 +455,12 @@ namespace CorporateBankingApp.Controllers
 
         //Client Module 
 
-        [HttpGet("GetClientForBeneficiary")]
-        public async Task<List<GetBeneficiaryDTO>> GetClientForBeneficiary()
+        [HttpGet("GetClientForBeneficiary/{id}")]
+        //[Authorize]
+        public async Task<List<GetBeneficiaryDTO>> GetClientForBeneficiary(int id)
         {
-
             var clients = await _context.Clients
-                .Where(s => s.Status == StatusEnum.Approved)
+                .Where(s => s.Status == StatusEnum.Approved && s.ClientId != id)
                 .ToListAsync();
 
 

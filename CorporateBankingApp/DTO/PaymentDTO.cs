@@ -14,6 +14,7 @@
         public string Amount { get; set; }
         public int SenderId { get; set; }
         public int ReceiverId { get; set; }
+        public string Email { get; set; }
         public string Remarks { get; set; }
     }
 }

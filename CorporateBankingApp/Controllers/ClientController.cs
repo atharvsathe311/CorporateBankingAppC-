@@ -278,55 +278,80 @@ namespace CorporateBankingApp.Controllers
         [HttpPost("NewBeneficiaryOutboundClient")]
         public async Task<ActionResult> NewBeneficiaryOutboundClient([FromBody] OutboundBeneficiaryDTO clientDTO)
         {
-            Client client = new Client();
-
-            client.CompanyName = clientDTO.FullName;
-            client.CreatedAt = DateTime.Now;
-            client.isActive = true;
+            Client client = new Client
+            {
+                CompanyName = clientDTO.FullName,
+                CreatedAt = DateTime.Now,
+                isActive = true
+            };
 
             Bank bank = await _bankService.GetBankByIdAsync(1);
 
-            BankAccount bankAccount = new BankAccount() { Balance = 50000000, BlockedFunds = 0, CreatedAt = DateTime.Now };
-
-            if (bank.BankAccounts != null)
+            BankAccount bankAccount = new BankAccount()
             {
-                bank.BankAccounts.Add(bankAccount);
-                client.BankAccount = bankAccount;
-                client.isBeneficiaryOutbound = true;
-                await _clientService.CreateClientAsync(client);
-                return Ok(client);
-            }
+                Balance = 50000000,
+                BlockedFunds = 0,
+                CreatedAt = DateTime.Now
+            };
+
             bank.BankAccounts = new List<BankAccount> { bankAccount };
             client.BankAccount = bankAccount;
             client.isBeneficiaryOutbound = true;
+            client.BankId = bank.BankId;
+
             await _clientService.CreateClientAsync(client);
-            return Ok(client);
+
+            Client newClient = _dbContext.Clients.FirstOrDefault(c => c.ClientId == clientDTO.ClientId);
+
+            if (newClient == null)
+            {
+                return BadRequest("Client not found.");
+            }
+
+            if (newClient.BeneficiaryLists == null)
+            {
+                newClient.BeneficiaryLists = new List<int>();
+            }
+
+            if (newClient.BeneficiaryLists.Contains(client.ClientId))
+            {
+                return BadRequest("This beneficiary has already been added.");
+            }
+
+            newClient.BeneficiaryLists.Add(client.ClientId);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok("Saved");
         }
 
         [HttpPost("AddBeneficiary")]
         public async Task<ActionResult> AddBeneficiary([FromBody] AddBeneficiaryDTO addBeneficiaryDTO)
         {
-
             Client client = await _clientService.GetClientByIdAsync(addBeneficiaryDTO.Id);
 
             if (client == null)
             {
-                return BadRequest("Null");
+                return BadRequest("Client not found.");
             }
 
-            if (client.BeneficiaryLists != null)
+            if (client.BeneficiaryLists == null)
             {
-                client.BeneficiaryLists.Add(addBeneficiaryDTO.Ids);
-                _dbContext.SaveChanges();
-                return Ok("Saved");
+                client.BeneficiaryLists = new List<int>();
             }
 
-            client.BeneficiaryLists = new List<int>() { };
-            client.BeneficiaryLists.Add(addBeneficiaryDTO.Ids);
-            _dbContext.SaveChanges();
+            if (client.BeneficiaryLists.Contains(addBeneficiaryDTO.Ids))
+            {
+                Console.WriteLine(client.BeneficiaryLists);
+                Console.WriteLine(client.BeneficiaryLists.Contains(addBeneficiaryDTO.Ids));
+                return BadRequest("This beneficiary has already been added.");
+            }
 
-            return Ok("Saved");
+            client.BeneficiaryLists.Add(addBeneficiaryDTO.Ids);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok("Beneficiary has been added successfully.");
         }
+
 
     }
 }
