@@ -601,7 +601,7 @@ namespace CorporateBankingApp.Controllers
                            s.ReceiverId.ToString().Contains(searchTerm) ||
                            s.Amount.ToString().Contains(searchTerm) ||
                            s.Remarks.ToString().Contains(searchTerm)) &&
-                           s.Status == StatusEnum.Submitted && (s.SenderBankId == id || s.ReceiverBankId == id));
+                           s.Status == StatusEnum.Submitted && s.SenderId==id);
 
             }
 
@@ -719,8 +719,6 @@ namespace CorporateBankingApp.Controllers
                 TotalCount = totalCount
             });
         }
-
-
 
 
 
@@ -977,22 +975,110 @@ namespace CorporateBankingApp.Controllers
         }
 
 
+        //[HttpGet("GetBeneficiaryOfClient/{id}")]
+        //public ActionResult GetBeneficiaryOfClient(int id, int page = 1, int pageSize = 10, string searchTerm = "")
+        //{
+
+        //    //var clients = await _context.Clients
+        //    //        .Where(s => s.ClientId == id).FirstOrDefaultAsync();
+
+        //    //List<Client> listClient = new List<Client>();
+        //    //foreach (var client in clients.BeneficiaryLists)
+        //    //{
+        //    //    Client tempClient = _context.Clients.Include("BankAccount").Where(s=>s.ClientId == client).FirstOrDefault();
+        //    //    listClient.Add(tempClient);
+        //    //}
+
+        //    //return listClient;
+
+        //    IQueryable<Client> query = _context.Clients.AsQueryable();
+
+        //    if (string.IsNullOrWhiteSpace(searchTerm))
+        //    {
+        //        query = query.Where(s => (s.Status == StatusEnum.Rejected) && s.BankId == id);
+        //    }
+
+        //    if (!string.IsNullOrWhiteSpace(searchTerm))
+        //    {
+        //        query = query.Where(s =>
+        //            (s.CompanyName.Contains(searchTerm) ||
+        //            s.CompanyEmail.Contains(searchTerm) ||
+        //            s.CompanyPhone.Contains(searchTerm)) && (s.Status == StatusEnum.Rejected) && s.BankId == id);
+        //    }
+
+        //    var totalCount = query.Count();
+
+        //    var clients = query
+        //        .Skip((page - 1) * pageSize)
+        //        .Take(pageSize)
+        //        .Select(c => new ViewSubmittedClientDTO
+        //        {
+        //            ClientId = c.ClientId,
+        //            CompanyName = c.CompanyName,
+        //            CompanyEmail = c.CompanyEmail,
+        //            CompanyPhone = c.CompanyPhone,
+        //            Status = c.Status
+        //        })
+        //        .ToListAsync();
+
+        //    return Ok(new
+        //    {
+        //        Clients = clients,
+        //        TotalCount = totalCount
+        //    });
+        //}
+
         [HttpGet("GetBeneficiaryOfClient/{id}")]
-        public async Task<List<Client>> GetBeneficiaryOfClient(int id)
+        public async Task<ActionResult> GetBeneficiaryOfClient(int id, int page = 1, int pageSize = 10, string searchTerm = "")
         {
+            var client = await _context.Clients
+                .FirstOrDefaultAsync(s => s.ClientId == id && s.Status == StatusEnum.Approved);
 
-            var clients = await _context.Clients
-                    .Where(s => s.ClientId == id).FirstOrDefaultAsync();
-
-            List<Client> listClient = new List<Client>();
-            foreach (var client in clients.BeneficiaryLists)
+            if (client == null)
             {
-                Client tempClient = _context.Clients.Include("BankAccount").Where(s=>s.ClientId == client).FirstOrDefault();
-                listClient.Add(tempClient);
+                return NotFound();
             }
 
-            return listClient;
+            IQueryable<Client> query = _context.Clients.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(a => client.BeneficiaryLists.Contains(a.ClientId));
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(a => client.BeneficiaryLists.Contains(a.ClientId) && 
+                    (a.CompanyName.Contains(searchTerm) ||
+                     a.CompanyEmail.Contains(searchTerm) ||
+                     a.CompanyPhone.Contains(searchTerm)));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var beneficiaries = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(b => new
+                {
+                    b.ClientId,
+                    b.CompanyName,
+                    b.CompanyEmail,
+                    b.CompanyPhone,
+                    b.BankAccount,
+                    b.isBeneficiaryOutbound,
+                    b.BeneficiaryLists,
+                    b.Status,
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                Beneficiaries = beneficiaries,
+                TotalCount = totalCount
+            });
         }
+
     }
 
 
