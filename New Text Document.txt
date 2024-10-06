@@ -1,0 +1,225 @@
+[HttpPost("SinglePayment")]
+        public async Task<string> SinglePayment([FromBody] PaymentDTO paymentDTO)
+        {
+            Transaction transaction = new Transaction();
+
+            // Fetch the sender and receiver bank accounts
+            BankAccount sender = await _clientService.GetClientBankAccount(paymentDTO.SenderId);
+            BankAccount receiver = await _clientService.GetClientBankAccount(paymentDTO.ReceiverId);
+
+            decimal amount = decimal.Parse(paymentDTO.Amount);
+            transaction.SenderId = paymentDTO.SenderId;
+            transaction.ReceiverId = paymentDTO.ReceiverId;
+            transaction.SenderBankId = sender.BankId;
+            transaction.ReceiverBankId = receiver.BankId;
+            transaction.Amount = paymentDTO.Amount;
+            transaction.DateTime = DateTime.Now;
+            transaction.Status = StatusEnum.Submitted;
+            transaction.Remarks = paymentDTO.Remarks;
+
+            // Check if the sender has sufficient balance and account payable
+            if (sender.Balance >= amount + 500 && sender.AccountPayable >= amount)
+            {
+                sender.Balance -= amount; // Deduct amount from sender's balance
+                sender.AccountPayable -= amount; // Deduct amount from sender's account payable
+                sender.BlockedFunds += amount; // Add amount to blocked funds
+                
+                // Only add the transaction if it succeeds
+                await _clientService.AddTransaction(transaction);
+                await _corporateBankAppDbContext.SaveChangesAsync();
+
+                return "Transaction Added";
+            }
+
+            transaction.Status = StatusEnum.Rejected;
+            transaction.Remarks = "Transaction Rejected Due to Insufficient Funds or Account Payable";
+            await _clientService.AddTransaction(transaction);
+            await _corporateBankAppDbContext.SaveChangesAsync();
+            return "Transaction Rejected Due to Insufficient Funds or Account Payable";
+        }
+
+        [HttpPost("BulkPayment")]
+        public async Task<string> BulkPayment([FromBody] List<PaymentDTO> paymentDTOs)
+        {
+            BankAccount sender = await _clientService.GetClientBankAccount(paymentDTOs[0].SenderId);
+
+            foreach (PaymentDTO paymentDTO in paymentDTOs)
+            {
+                Transaction transaction = new Transaction();
+                BankAccount receiver = await _clientService.GetClientBankAccount(paymentDTO.ReceiverId);
+                decimal amount = decimal.Parse(paymentDTO.Amount);
+
+                transaction.SenderId = paymentDTO.SenderId;
+                transaction.ReceiverId = paymentDTO.ReceiverId;
+                transaction.Amount = paymentDTO.Amount;
+                transaction.DateTime = DateTime.Now;
+                transaction.Status = StatusEnum.Submitted;
+                transaction.Remarks = paymentDTO.Remarks;
+                transaction.SenderBankId = sender.BankId;
+                transaction.ReceiverBankId = receiver.BankId;
+
+                // Check for sufficient balance and account payable
+                if (sender.Balance >= amount + 500 && sender.AccountPayable >= amount)
+                {
+                    sender.Balance -= amount;
+                    sender.AccountPayable -= amount;
+                    sender.BlockedFunds += amount;
+                    await _clientService.AddTransaction(transaction);
+                    continue;
+                }
+
+                transaction.Status = StatusEnum.Rejected;
+                transaction.Remarks = "Transaction Rejected Due to Insufficient Funds or Account Payable";
+            }
+            await _corporateBankAppDbContext.SaveChangesAsync();
+            return "Bulk Payment Processed";
+        }
+
+        [HttpPost("SalaryPayment")]
+        public async Task<string> SalaryPayment([FromBody] List<SalaryDTO> salaryDTOs)
+        {
+            BankAccount sender = await _clientService.GetClientBankAccount(salaryDTOs[0].SenderId);
+
+            foreach (SalaryDTO salaryDto in salaryDTOs)
+            {
+                Transaction transaction = new Transaction();
+                decimal amount = decimal.Parse(salaryDto.Amount);
+
+                transaction.SenderId = salaryDto.SenderId;
+                transaction.ReceiverId = salaryDto.ReceiverId;
+                transaction.Amount = salaryDto.Amount;
+                transaction.DateTime = DateTime.Now;
+                transaction.Status = StatusEnum.Submitted;
+                transaction.Remarks = salaryDto.Remarks + " " + salaryDto.Name;
+                transaction.SenderBankId = sender.BankId;
+                transaction.ReceiverBankId = 99999; // Assuming a placeholder for the receiver bank
+
+                // Check if salary is sufficient for processing
+                if (sender.Salary >= amount)
+                {
+                    sender.Salary -= amount; // Deduct salary
+                    sender.BlockedFunds += amount; // Add amount to blocked funds
+                    await _clientService.AddTransaction(transaction);
+                    continue;
+                }
+
+                transaction.Status = StatusEnum.Rejected;
+                transaction.Remarks += " Transaction Rejected Due to Insufficient Salary";
+            }
+            await _corporateBankAppDbContext.SaveChangesAsync();
+            return "Salary Payment Processed";
+        }
+
+        [HttpPost("SinglePaymentAccepted/{id}")]
+        public async Task<string> SinglePaymentAccepted(int id)
+        {
+            var transaction = await _transactionService.GetTransactionByIdAsync(id);
+            BankAccount sender = await _clientService.GetClientBankAccount(transaction.SenderId);
+            BankAccount receiver = await _clientService.GetClientBankAccount(transaction.ReceiverId);
+            
+            transaction.Status = StatusEnum.Approved;
+            decimal amount = decimal.Parse(transaction.Amount);
+            
+            // Ensure blocked funds do not go negative
+            if (sender.BlockedFunds >= amount)
+            {
+                sender.BlockedFunds -= amount; // Release blocked funds
+                receiver.Balance += amount; // Add amount to receiver's balance
+                transaction.Remarks = "Payment Success";
+            }
+            else
+            {
+                transaction.Status = StatusEnum.Rejected;
+                transaction.Remarks = "Blocked funds insufficient for transaction release";
+            }
+            
+            await _corporateBankAppDbContext.SaveChangesAsync();
+            return transaction.Status == StatusEnum.Approved ? "Payment Success" : "Payment Rejected";
+        }
+
+        [HttpPost("BulkPaymentAccepted")]
+        public async Task<string> BulkPaymentAccepted([FromBody] List<int> ids)
+        {
+            foreach (int id in ids)
+            {
+                var transaction = await _transactionService.GetTransactionByIdAsync(id);
+                BankAccount sender = await _clientService.GetClientBankAccount(transaction.SenderId);
+
+                if (transaction.Remarks.Length > 6 && transaction.Remarks.Substring(0, 6) == "Salary")
+                {
+                    transaction.Status = StatusEnum.Approved;
+                    sender.BlockedFunds -= decimal.Parse(transaction.Amount);
+                    transaction.Remarks += " Payment Success";
+                    continue;
+                }
+
+                BankAccount receiver = await _clientService.GetClientBankAccount(transaction.ReceiverId);
+                transaction.Status = StatusEnum.Approved;
+                decimal amount = decimal.Parse(transaction.Amount);
+
+                // Ensure blocked funds do not go negative
+                if (sender.BlockedFunds >= amount)
+                {
+                    sender.BlockedFunds -= amount;
+                    receiver.Balance += amount;
+                    transaction.Remarks += " Payment Success";
+                }
+                else
+                {
+                    transaction.Status = StatusEnum.Rejected;
+                    transaction.Remarks += " Insufficient blocked funds for release";
+                }
+            }
+            await _corporateBankAppDbContext.SaveChangesAsync();
+            return "Bulk Payment Status Updated";
+        }
+
+        [HttpPost("SalaryPaymentAccepted")]
+        public async Task<string> SalaryPaymentAccepted([FromBody] List<int> ids)
+        {
+            foreach (int id in ids)
+            {
+                var transaction = await _transactionService.GetTransactionByIdAsync(id);
+                BankAccount sender = await _clientService.GetClientBankAccount(transaction.SenderId);
+                transaction.Status = StatusEnum.Approved;
+                decimal amount = decimal.Parse(transaction.Amount);
+                
+                // Ensure blocked funds do not go negative
+                if (sender.BlockedFunds >= amount)
+                {
+                    sender.BlockedFunds -= amount;
+                    transaction.Remarks += " Payment Success";
+                }
+                else
+                {
+                    transaction.Status = StatusEnum.Rejected;
+                    transaction.Remarks += " Insufficient blocked funds for release";
+                }
+            }
+            await _corporateBankAppDbContext.SaveChangesAsync();
+            return "Salary Payment Status Updated";
+        }
+
+        [HttpPost("BulkPaymentRejected")]
+        public async Task<string> BulkPaymentRejected([FromBody] RejectTransactionDTO ids)
+        {
+            foreach (int rejectTransaction in ids.TransactionId)
+            {
+                var transaction = await _transactionService.GetTransactionByIdAsync(rejectTransaction);
+                BankAccount sender = await _clientService.GetClientBankAccount(transaction.SenderId);
+                decimal amount = decimal.Parse(transaction.Amount);
+                
+                if (transaction.Remarks.Contains("Insufficient Funds"))
+                {
+                    sender.Balance += amount; // Release funds back to sender's balance
+                }
+                else
+                {
+                    sender.AccountPayable += amount; // Release funds back to sender's account payable
+                }
+                transaction.Status = StatusEnum.Rejected;
+                await _corporateBankAppDbContext.SaveChangesAsync();
+            }
+            return "Bulk Payment Rejections Processed";
+        }
+    }

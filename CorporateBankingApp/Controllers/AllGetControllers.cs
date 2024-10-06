@@ -876,7 +876,7 @@ namespace CorporateBankingApp.Controllers
         public async Task<ActionResult> GetDashBoardBank(int id)
         {
             IEnumerable<Transaction> transactions = await _context.Transactions.Where(s => s.Status == StatusEnum.Rejected && (s.SenderBankId == id || s.ReceiverBankId == id)).ToListAsync();
-            double balance = 0;
+            decimal balance = 0;
             Bank bank = await _context.Banks.Where(s => s.BankId == id).Include("BankAccounts").FirstOrDefaultAsync();
 
             foreach (BankAccount bankAccount in bank.BankAccounts)
@@ -927,8 +927,6 @@ namespace CorporateBankingApp.Controllers
             };
             return Ok(data);
         }
-
-
 
 
 

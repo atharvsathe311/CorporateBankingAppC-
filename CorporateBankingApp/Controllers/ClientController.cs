@@ -9,8 +9,8 @@ using CorporateBankingApp.Data;
 using System.Collections.Generic;
 using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
-//using CloudinaryDotNet;
-//using CloudinaryDotNet.Actions;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace CorporateBankingApp.Controllers
 {
@@ -65,7 +65,7 @@ namespace CorporateBankingApp.Controllers
 
             UserLogin userLogin = new UserLogin
             {
-                LoginUserName = clientDTO.CompanyName.Substring(0, 4) + count,
+                LoginUserName = clientDTO.CompanyName.ToUpper().Substring(0, 4) + count,
                 PasswordHash = BCrypt.Net.BCrypt.EnhancedHashPassword("Admin@123"),
                 UserType = UserType.Client
             };
@@ -235,18 +235,20 @@ namespace CorporateBankingApp.Controllers
         [HttpGet("AcceptBank/{id}")]
         public async Task<ActionResult> AcceptBank(int id)
         {
-            Bank bank = await _bankService.GetBankByIdAsync(id);
+            Bank bank = await _dbContext.Banks.Where(s => s.BankId == id).Include(b => b.BankKyc).ThenInclude(b => b.LicenseRegulatorApprovalsOrLicenseAgreement).Include(c => c.BankKyc).ThenInclude(c => c.FinancialStatements).Include(d => d.BankKyc).ThenInclude(d => d.AnnualReports).FirstOrDefaultAsync();
             bank.Status = StatusEnum.Approved;
             _dbContext.SaveChanges();
+            _emailService.SendKycApprovalEmail(bank.BankEmail,bank.BankName,bank.BankKyc.BankKycId.ToString(),bank.BankKyc.LicenseRegulatorApprovalsOrLicenseAgreement.FilePath,bank.BankKyc.FinancialStatements.FilePath,bank.BankKyc.AnnualReports.FilePath);
             return Ok(bank);
         }
 
         [HttpGet("RejectBank/{id}")]
         public async Task<ActionResult> RejectBank(int id)
         {
-            Bank bank = await _bankService.GetBankByIdAsync(id);
+            Bank bank = await _dbContext.Banks.Where(s => s.BankId == id).Include(b => b.BankKyc).ThenInclude(b => b.LicenseRegulatorApprovalsOrLicenseAgreement).Include(c => c.BankKyc).ThenInclude(c => c.FinancialStatements).Include(d => d.BankKyc).ThenInclude(d => d.AnnualReports).FirstOrDefaultAsync();
             bank.Status = StatusEnum.Rejected;
             _dbContext.SaveChanges();
+            _emailService.SendKycRejectedEmail(bank.BankEmail, bank.BankName, bank.BankKyc.BankKycId.ToString(), "Rejected Due to Incomplete or Invalid KYC Documents");
             return Ok(bank);
         }
 
@@ -254,24 +256,26 @@ namespace CorporateBankingApp.Controllers
         [HttpGet("AcceptClient/{id}")]
         public async Task<ActionResult> OnboardClient(int id)
         {
-            Client client = await _clientService.GetClientByIdAsync(id);
+            Client client = await _dbContext.Clients.Where(s => s.ClientId == id).Include(c => c.ClientKyc).ThenInclude(c => c.PowerOfAttorney).Include(c => c.ClientKyc).ThenInclude(c => c.BankAccess).Include(c => c.ClientKyc).ThenInclude(c => c.MOU).FirstOrDefaultAsync();
 
             Bank bank = await _bankService.GetBankByIdAsync(1);
-            BankAccount bankAccount = new BankAccount() { Balance = 50000000, BlockedFunds = 0, CreatedAt = DateTime.Now };
+            BankAccount bankAccount = new BankAccount(50000000m) { BlockedFunds = 0, CreatedAt = DateTime.Now };
             bank.BankAccounts.Add(bankAccount);
             client.BankAccount = bankAccount;
             client.Status = StatusEnum.Approved;
             _dbContext.SaveChanges();
+            _emailService.SendClientKycApprovalEmail(client.CompanyEmail, client.CompanyName, client.ClientKyc.ClientKycId.ToString(),client.ClientKyc.PowerOfAttorney.FilePath,client.ClientKyc.BankAccess.FilePath,client.ClientKyc.MOU.FilePath);
             return Ok(client);
         }
 
         [HttpGet("RejectClient/{id}")]
         public async Task<ActionResult> RejectClient(int id)
         {
-            Client client = await _clientService.GetClientByIdAsync(id);
+            Client client = await _dbContext.Clients.Where(s => s.ClientId == id).Include(c => c.ClientKyc).ThenInclude(c => c.PowerOfAttorney).Include(c => c.ClientKyc).ThenInclude(c => c.BankAccess).Include(c => c.ClientKyc).ThenInclude(c => c.MOU).FirstOrDefaultAsync();
             client.Status = StatusEnum.Rejected;
             client.isActive = false;
             _dbContext.SaveChanges();
+            _emailService.SendClientKycRejectedEmail(client.CompanyEmail, client.CompanyName,client.ClientKyc.ClientKycId.ToString(),"Rejected Due to Incomplete or Invalid KYC Documents");
             return NoContent();
         }
 
@@ -287,9 +291,8 @@ namespace CorporateBankingApp.Controllers
 
             Bank bank = await _bankService.GetBankByIdAsync(1);
 
-            BankAccount bankAccount = new BankAccount()
+            BankAccount bankAccount = new BankAccount(50000000)
             {
-                Balance = 50000000,
                 BlockedFunds = 0,
                 CreatedAt = DateTime.Now
             };

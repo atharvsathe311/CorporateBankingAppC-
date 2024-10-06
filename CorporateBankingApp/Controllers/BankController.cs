@@ -51,7 +51,7 @@ namespace CorporateBankingApp.Controllers
             bank.Status = StatusEnum.Submitted;
             UserLogin userLogin = new UserLogin()
             {
-                LoginUserName = bankDto.BankName.Substring(0, 4) + count,
+                LoginUserName = bankDto.BankName.ToUpper().Substring(0, 4) + count,
                 PasswordHash = BCrypt.Net.BCrypt.EnhancedHashPassword("Admin@123"),
                 UserType = UserType.Bank,
             };
