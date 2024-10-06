@@ -74,7 +74,8 @@ namespace CorporateBankingApp.Controllers
             {
                 query = query.Where(s =>( s.Status == StatusEnum.InProcess || s.Status == StatusEnum.Submitted) &&
                     (s.BankName.Contains(searchTerm) ||
-                     s.BankEmail.Contains(searchTerm)));
+                     s.BankEmail.Contains(searchTerm) ||
+                     s.BankIFSCCode.Contains(searchTerm)));
             }
             else
             {
@@ -91,6 +92,7 @@ namespace CorporateBankingApp.Controllers
                     b.BankId,
                     b.BankName,
                     b.BankEmail,
+                    b.BankIFSCCode,
                     b.Status
                 })
                 .ToList();
@@ -102,17 +104,88 @@ namespace CorporateBankingApp.Controllers
             });
         }
 
-
         [HttpGet("GetBankOnboarded")]
-        public IEnumerable<Bank> GetBankOnboarded()
+        public IActionResult GetBankOnboarded(int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            return _context.Banks.Where(s => s.Status == StatusEnum.Approved).ToList();
+            IQueryable<Bank> query = _context.Banks.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => (s.Status == StatusEnum.Approved) &&
+                    (s.BankName.Contains(searchTerm) ||
+                     s.BankEmail.Contains(searchTerm) ||
+                     s.BankIFSCCode.Contains(searchTerm)));
+            }
+            else
+            {
+                query = query.Where(s => s.Status == StatusEnum.Approved);
+            }
+
+            var totalCount = query.Count();
+
+            var banks = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(b => new
+                {
+                    b.BankId,
+                    b.BankName,
+                    b.BankEmail,
+                    b.BankIFSCCode,
+                    b.Status
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                Banks = banks,
+                TotalCount = totalCount
+            });
         }
 
+        //[HttpGet("GetBankRejected")]
+        //public IEnumerable<Bank> GetBankRejected()
+        //{
+        //    return _context.Banks.Where(s => s.Status == StatusEnum.Rejected).ToList();
+        //}
+
         [HttpGet("GetBankRejected")]
-        public IEnumerable<Bank> GetBankRejected()
+        public IActionResult GetBankRejected(int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            return _context.Banks.Where(s => s.Status == StatusEnum.Rejected).ToList();
+            IQueryable<Bank> query = _context.Banks.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => (s.Status == StatusEnum.Rejected) &&
+                    (s.BankName.Contains(searchTerm) ||
+                     s.BankEmail.Contains(searchTerm) ||
+                     s.BankIFSCCode.Contains(searchTerm)));
+            }
+            else
+            {
+                query = query.Where(s => s.Status == StatusEnum.Rejected);
+            }
+
+            var totalCount = query.Count();
+
+            var banks = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(b => new
+                {
+                    b.BankId,
+                    b.BankName,
+                    b.BankEmail,
+                    b.BankIFSCCode,
+                    b.Status
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                Banks = banks,
+                TotalCount = totalCount
+            });
         }
 
 
@@ -253,32 +326,46 @@ namespace CorporateBankingApp.Controllers
             });
         }
 
-        [HttpGet("GetAllApprovedClient")]
-        public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllApprovedClient()
-        {
-            var clients = _context.Clients.Where(s => s.Status == StatusEnum.Approved).ToList();
-            var clientsToReturn = new List<ViewSubmittedClientDTO>();
-            foreach (var client in clients)
-            {
-                Console.WriteLine(client);
-                var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
-                clientsToReturn.Add(submittedClient);
-            }
-            return Ok(clientsToReturn);
-        }
 
-        //[HttpGet("GetAllSubmittedClients")]
-        //public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllSubmittedClients()
-        //{
-        //    var clients = _context.Clients.Where(s => s.Status == StatusEnum.Submitted || s.Status == StatusEnum.InProcess).ToList();
-        //    var clientsToReturn = new List<ViewSubmittedClientDTO>();
-        //    foreach (var client in clients)
-        //    {
-        //        var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
-        //        clientsToReturn.Add(submittedClient);
-        //    }
-        //    return Ok(clientsToReturn);
-        //}
+        [HttpGet("GetAllApprovedClient")]
+        public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllApprovedClient(int page = 1, int pageSize = 10, string searchTerm = "")
+        {
+            IQueryable<Client> query = _context.Clients.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => s.Status == StatusEnum.Approved);
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s =>
+                    (s.CompanyName.Contains(searchTerm) ||
+                    s.CompanyEmail.Contains(searchTerm) ||
+                    s.CompanyPhone.Contains(searchTerm)) && (s.Status == StatusEnum.Approved));
+            }
+
+            var totalCount = query.Count();
+
+            var clients = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(c => new ViewSubmittedClientDTO
+                {
+                    ClientId = c.ClientId,
+                    CompanyName = c.CompanyName,
+                    CompanyEmail = c.CompanyEmail,
+                    CompanyPhone = c.CompanyPhone,
+                    Status = c.Status
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                Clients = clients,
+                TotalCount = totalCount
+            });
+        }
 
         [HttpGet("GetAllSubmittedClients")]
         public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllSubmittedClients(int page = 1, int pageSize = 10, string searchTerm = "")
@@ -320,98 +407,463 @@ namespace CorporateBankingApp.Controllers
             });
         }
 
-
         [HttpGet("GetAllRejectedClient")]
-        public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllRejectedClient()
+        public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllRejectedClient(int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            var clients = _context.Clients.Where(s => s.Status == StatusEnum.Rejected).ToList();
-            var clientsToReturn = new List<ViewSubmittedClientDTO>();
-            foreach (var client in clients)
+            IQueryable<Client> query = _context.Clients.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                Console.WriteLine(client);
-                var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
-                clientsToReturn.Add(submittedClient);
+                query = query.Where(s => s.Status == StatusEnum.Rejected);
             }
-            return Ok(clientsToReturn);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s =>
+                    (s.CompanyName.Contains(searchTerm) ||
+                    s.CompanyEmail.Contains(searchTerm) ||
+                    s.CompanyPhone.Contains(searchTerm)) && (s.Status == StatusEnum.Rejected));
+            }
+
+            var totalCount = query.Count();
+
+            var clients = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(c => new ViewSubmittedClientDTO
+                {
+                    ClientId = c.ClientId,
+                    CompanyName = c.CompanyName,
+                    CompanyEmail = c.CompanyEmail,
+                    CompanyPhone = c.CompanyPhone,
+                    Status = c.Status
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                Clients = clients,
+                TotalCount = totalCount
+            });
         }
 
-
-
         [HttpGet("GetTransactionBank/{id}")]
-        public IEnumerable<Transaction> GetTransactionBank(int id)
+        public IActionResult GetTransactionBank(int id, int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            return _context.Transactions.Where(s => s.Status == StatusEnum.Submitted && (s.SenderBankId == id || s.ReceiverBankId == id)).ToList();
+            IQueryable<Transaction> query = _context.Transactions.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => s.Status == StatusEnum.Submitted && (s.SenderBankId == id || s.ReceiverBankId == id));
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => (s.TransactionId.ToString().Contains(searchTerm) ||
+                           s.SenderId.ToString().Contains(searchTerm) ||
+                           s.ReceiverId.ToString().Contains(searchTerm) ||
+                           s.Amount.ToString().Contains(searchTerm) ||
+                           s.Remarks.ToString().Contains(searchTerm)) &&
+                           s.Status == StatusEnum.Submitted && (s.SenderBankId == id || s.ReceiverBankId == id));
+
+            }
+
+            var totalCount = query.Count();
+
+            var transactions = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(t => new
+                {
+                    t.TransactionId,
+                    t.SenderId,
+                    t.ReceiverId,
+                    t.DateTime,
+                    t.Amount,
+                    t.Status,
+                    t.Remarks
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                Transactions = transactions,
+                TotalCount = totalCount
+            });
         }
 
         [HttpGet("GetTransactionApprovedBank/{id}")]
-        public IEnumerable<Transaction> GetTransactionApprovedBank(int id)
+        public IActionResult GetTransactionApprovedBank(int id, int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            return _context.Transactions.Where(s => s.Status == StatusEnum.Approved && (s.SenderBankId == id || s.ReceiverBankId == id)).ToList();
+            IQueryable<Transaction> query = _context.Transactions.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => s.Status == StatusEnum.Approved && (s.SenderBankId == id || s.ReceiverBankId == id));
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => (s.TransactionId.ToString().Contains(searchTerm) ||
+                           s.SenderId.ToString().Contains(searchTerm) ||
+                           s.ReceiverId.ToString().Contains(searchTerm) ||
+                           s.Amount.ToString().Contains(searchTerm) ||
+                           s.Remarks.ToString().Contains(searchTerm)) &&
+                           s.Status == StatusEnum.Approved && (s.SenderBankId == id || s.ReceiverBankId == id));
+
+            }
+
+            var totalCount = query.Count();
+
+            var transactions = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(t => new
+                {
+                    t.TransactionId,
+                    t.SenderId,
+                    t.ReceiverId,
+                    t.DateTime,
+                    t.Amount,
+                    t.Status,
+                    t.Remarks
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                Transactions = transactions,
+                TotalCount = totalCount
+            });
         }
 
         [HttpGet("GetTransactionRejectedBank/{id}")]
-        public IEnumerable<Transaction> GetTransactionRejectedBank(int id)
+        public IActionResult GetTransactionRejectedBank(int id, int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            return _context.Transactions.Where(s => s.Status == StatusEnum.Rejected && (s.SenderBankId == id || s.ReceiverBankId == id)).ToList();
+            IQueryable<Transaction> query = _context.Transactions.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => s.Status == StatusEnum.Rejected && (s.SenderBankId == id || s.ReceiverBankId == id));
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => (s.TransactionId.ToString().Contains(searchTerm) ||
+                           s.SenderId.ToString().Contains(searchTerm) ||
+                           s.ReceiverId.ToString().Contains(searchTerm) ||
+                           s.Amount.ToString().Contains(searchTerm) ||
+                           s.Remarks.ToString().Contains(searchTerm)) &&
+                           s.Status == StatusEnum.Rejected && (s.SenderBankId == id || s.ReceiverBankId == id));
+
+            }
+
+            var totalCount = query.Count();
+
+            var transactions = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(t => new
+                {
+                    t.TransactionId,
+                    t.SenderId,
+                    t.ReceiverId,
+                    t.DateTime,
+                    t.Amount,
+                    t.Status,
+                    t.Remarks
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                Transactions = transactions,
+                TotalCount = totalCount
+            });
         }
 
         [HttpGet("GetTransactionClient/{id}")]
-        public IEnumerable<Transaction> GetTransactionClient(int id)
+        public IActionResult GetTransactionClient(int id, int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            return _context.Transactions.Where(s => s.Status == StatusEnum.Submitted && (s.SenderId == id)).ToList();
+            //return _context.Transactions.Where(s => s.Status == StatusEnum.Submitted && (s.SenderId == id)).ToList();
+            IQueryable<Transaction> query = _context.Transactions.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => s.Status == StatusEnum.Submitted && (s.SenderBankId == id || s.ReceiverBankId == id));
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => (s.TransactionId.ToString().Contains(searchTerm) ||
+                           s.SenderId.ToString().Contains(searchTerm) ||
+                           s.ReceiverId.ToString().Contains(searchTerm) ||
+                           s.Amount.ToString().Contains(searchTerm) ||
+                           s.Remarks.ToString().Contains(searchTerm)) &&
+                           s.Status == StatusEnum.Submitted && (s.SenderBankId == id || s.ReceiverBankId == id));
+
+            }
+
+            var totalCount = query.Count();
+
+            var transactions = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(t => new
+                {
+                    t.TransactionId,
+                    t.SenderId,
+                    t.ReceiverId,
+                    t.DateTime,
+                    t.Amount,
+                    t.Status,
+                    t.Remarks
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                Transactions = transactions,
+                TotalCount = totalCount
+            });
         }
 
-
         [HttpGet("GetTransactionApprovedClient/{id}")]
-        public IEnumerable<Transaction> GetTransactionApprovedClient(int id)
+        public IActionResult GetTransactionApprovedClient(int id, int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            return _context.Transactions.Where(s => s.Status == StatusEnum.Approved && (s.SenderId == id || s.ReceiverId == id)).ToList();
+            //return _context.Transactions.Where(s => s.Status == StatusEnum.Approved && (s.SenderId == id || s.ReceiverId == id)).ToList();
+            IQueryable<Transaction> query = _context.Transactions.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => s.Status == StatusEnum.Approved && (s.SenderBankId == id || s.ReceiverBankId == id));
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => (s.TransactionId.ToString().Contains(searchTerm) ||
+                           s.SenderId.ToString().Contains(searchTerm) ||
+                           s.ReceiverId.ToString().Contains(searchTerm) ||
+                           s.Amount.ToString().Contains(searchTerm) ||
+                           s.Remarks.ToString().Contains(searchTerm)) &&
+                           s.Status == StatusEnum.Approved && (s.SenderBankId == id || s.ReceiverBankId == id));
+
+            }
+
+            var totalCount = query.Count();
+
+            var transactions = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(t => new
+                {
+                    t.TransactionId,
+                    t.SenderId,
+                    t.ReceiverId,
+                    t.DateTime,
+                    t.Amount,
+                    t.Status,
+                    t.Remarks
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                Transactions = transactions,
+                TotalCount = totalCount
+            });
         }
 
         [HttpGet("GetTransactionRejectedClient/{id}")]
-        public IEnumerable<Transaction> GetTransactionRejectedClient(int id)
+        public IActionResult GetTransactionRejectedClient(int id, int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            return _context.Transactions.Where(s => s.Status == StatusEnum.Rejected && (s.SenderId == id)).ToList();
+            //return _context.Transactions.Where(s => s.Status == StatusEnum.Rejected && (s.SenderId == id)).ToList();
+            IQueryable<Transaction> query = _context.Transactions.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => s.Status == StatusEnum.Rejected && (s.SenderBankId == id || s.ReceiverBankId == id));
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => (s.TransactionId.ToString().Contains(searchTerm) ||
+                           s.SenderId.ToString().Contains(searchTerm) ||
+                           s.ReceiverId.ToString().Contains(searchTerm) ||
+                           s.Amount.ToString().Contains(searchTerm) ||
+                           s.Remarks.ToString().Contains(searchTerm)) &&
+                           s.Status == StatusEnum.Rejected && (s.SenderBankId == id || s.ReceiverBankId == id));
+
+            }
+
+            var totalCount = query.Count();
+
+            var transactions = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(t => new
+                {
+                    t.TransactionId,
+                    t.SenderId,
+                    t.ReceiverId,
+                    t.DateTime,
+                    t.Amount,
+                    t.Status,
+                    t.Remarks
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                Transactions = transactions,
+                TotalCount = totalCount
+            });
         }
 
 
         [HttpGet("GetAllApprovedClientBank/{id}")]
-        public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllApprovedClientBank(int id)
+        public IActionResult GetAllApprovedClientBank(int id, int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            var clients = _context.Clients.Where(s => s.Status == StatusEnum.Approved && s.BankId == id).ToList();
-            var clientsToReturn = new List<ViewSubmittedClientDTO>();
-            foreach (var client in clients)
+            //var clients = _context.Clients.Where(s => s.Status == StatusEnum.Approved && s.BankId == id).ToList();
+            //var clientsToReturn = new List<ViewSubmittedClientDTO>();
+            //foreach (var client in clients)
+            //{
+            //    var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
+            //    clientsToReturn.Add(submittedClient);
+            //}
+            //return Ok(clientsToReturn);
+
+            IQueryable<Client> query = _context.Clients.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
-                clientsToReturn.Add(submittedClient);
+                query = query.Where(s => s.Status == StatusEnum.Approved && s.BankId == id);
             }
-            return Ok(clientsToReturn);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s =>
+                    (s.CompanyName.Contains(searchTerm) ||
+                    s.CompanyEmail.Contains(searchTerm) ||
+                    s.CompanyPhone.Contains(searchTerm)) && (s.Status == StatusEnum.Approved && s.BankId == id));
+            }
+
+            var totalCount = query.Count();
+
+            var clients = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(c => new ViewSubmittedClientDTO
+                {
+                    ClientId = c.ClientId,
+                    CompanyName = c.CompanyName,
+                    CompanyEmail = c.CompanyEmail,
+                    CompanyPhone = c.CompanyPhone,
+                    Status = c.Status
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                Clients = clients,
+                TotalCount = totalCount
+            });
         }
 
         [HttpGet("GetAllSubmittedClientBank/{id}")]
-        public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllSubmittedBank(int id)
+        public IActionResult GetAllSubmittedBank(int id, int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            var clients = _context.Clients.Where(s => (s.Status == StatusEnum.Submitted || s.Status == StatusEnum.InProcess) && s.BankId == id).ToList();
-            var clientsToReturn = new List<ViewSubmittedClientDTO>();
-            foreach (var client in clients)
+            //var clients = _context.Clients.Where(s => (s.Status == StatusEnum.Submitted || s.Status == StatusEnum.InProcess) && s.BankId == id).ToList();
+            //var clientsToReturn = new List<ViewSubmittedClientDTO>();
+            //foreach (var client in clients)
+            //{
+            //    var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
+            //    clientsToReturn.Add(submittedClient);
+            //}
+            //return Ok(clientsToReturn);
+            IQueryable<Client> query = _context.Clients.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
-                clientsToReturn.Add(submittedClient);
+                query = query.Where(s => (s.Status == StatusEnum.Submitted || s.Status == StatusEnum.InProcess) && s.BankId == id);
             }
-            return Ok(clientsToReturn);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s =>
+                    (s.CompanyName.Contains(searchTerm) ||
+                    s.CompanyEmail.Contains(searchTerm) ||
+                    s.CompanyPhone.Contains(searchTerm)) && (s.Status == StatusEnum.Submitted || s.Status == StatusEnum.InProcess) && s.BankId == id);
+            }
+
+            var totalCount = query.Count();
+
+            var clients = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(c => new ViewSubmittedClientDTO
+                {
+                    ClientId = c.ClientId,
+                    CompanyName = c.CompanyName,
+                    CompanyEmail = c.CompanyEmail,
+                    CompanyPhone = c.CompanyPhone,
+                    Status = c.Status
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                Clients = clients,
+                TotalCount = totalCount
+            });
         }
 
         [HttpGet("GetAllRejectedClientBank/{id}")]
-        public async Task<ActionResult<IEnumerable<ViewSubmittedClientDTO>>> GetAllRejectedClientBank(int id)
+        public IActionResult GetAllRejectedClientBank(int id, int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            var clients = _context.Clients.Where(s => s.Status == StatusEnum.Rejected && s.BankId == id).ToList();
-            var clientsToReturn = new List<ViewSubmittedClientDTO>();
-            foreach (var client in clients)
+            //var clients = _context.Clients.Where(s => s.Status == StatusEnum.Rejected && s.BankId == id).ToList();
+            //var clientsToReturn = new List<ViewSubmittedClientDTO>();
+            //foreach (var client in clients)
+            //{
+            //    var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
+            //    clientsToReturn.Add(submittedClient);
+            //}
+            //return Ok(clientsToReturn);
+            IQueryable<Client> query = _context.Clients.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                var submittedClient = _mapper.Map<ViewSubmittedClientDTO>(client);
-                clientsToReturn.Add(submittedClient);
+                query = query.Where(s => (s.Status == StatusEnum.Rejected) && s.BankId == id);
             }
-            return Ok(clientsToReturn);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s =>
+                    (s.CompanyName.Contains(searchTerm) ||
+                    s.CompanyEmail.Contains(searchTerm) ||
+                    s.CompanyPhone.Contains(searchTerm)) && (s.Status == StatusEnum.Rejected) && s.BankId == id);
+            }
+
+            var totalCount = query.Count();
+
+            var clients = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(c => new ViewSubmittedClientDTO
+                {
+                    ClientId = c.ClientId,
+                    CompanyName = c.CompanyName,
+                    CompanyEmail = c.CompanyEmail,
+                    CompanyPhone = c.CompanyPhone,
+                    Status = c.Status
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                Clients = clients,
+                TotalCount = totalCount
+            });
         }
 
         // Dashboard Population

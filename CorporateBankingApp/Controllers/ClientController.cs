@@ -265,7 +265,7 @@ namespace CorporateBankingApp.Controllers
             return Ok(client);
         }
 
-        [HttpPost("RejectClient/{id}")]
+        [HttpGet("RejectClient/{id}")]
         public async Task<ActionResult> RejectClient(int id)
         {
             Client client = await _clientService.GetClientByIdAsync(id);
