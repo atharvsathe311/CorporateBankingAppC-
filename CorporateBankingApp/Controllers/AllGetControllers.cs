@@ -582,15 +582,16 @@ namespace CorporateBankingApp.Controllers
             });
         }
 
+
+
         [HttpGet("GetTransactionClient/{id}")]
         public IActionResult GetTransactionClient(int id, int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            //return _context.Transactions.Where(s => s.Status == StatusEnum.Submitted && (s.SenderId == id)).ToList();
             IQueryable<Transaction> query = _context.Transactions.AsQueryable();
 
             if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                query = query.Where(s => s.Status == StatusEnum.Submitted && (s.SenderBankId == id || s.ReceiverBankId == id));
+                query = query.Where(s => s.Status == StatusEnum.Submitted && s.SenderId == id);
             }
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -636,7 +637,7 @@ namespace CorporateBankingApp.Controllers
 
             if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                query = query.Where(s => s.Status == StatusEnum.Approved && (s.SenderBankId == id || s.ReceiverBankId == id));
+                query = query.Where(s => s.Status == StatusEnum.Approved && s.SenderId == id);
             }
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -646,7 +647,7 @@ namespace CorporateBankingApp.Controllers
                            s.ReceiverId.ToString().Contains(searchTerm) ||
                            s.Amount.ToString().Contains(searchTerm) ||
                            s.Remarks.ToString().Contains(searchTerm)) &&
-                           s.Status == StatusEnum.Approved && (s.SenderBankId == id || s.ReceiverBankId == id));
+                           s.Status == StatusEnum.Approved && s.SenderId == id);
 
             }
 
@@ -677,12 +678,11 @@ namespace CorporateBankingApp.Controllers
         [HttpGet("GetTransactionRejectedClient/{id}")]
         public IActionResult GetTransactionRejectedClient(int id, int page = 1, int pageSize = 10, string searchTerm = "")
         {
-            //return _context.Transactions.Where(s => s.Status == StatusEnum.Rejected && (s.SenderId == id)).ToList();
             IQueryable<Transaction> query = _context.Transactions.AsQueryable();
 
             if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                query = query.Where(s => s.Status == StatusEnum.Rejected && (s.SenderBankId == id || s.ReceiverBankId == id));
+                query = query.Where(s => s.Status == StatusEnum.Rejected && s.SenderId == id );
             }
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -692,7 +692,7 @@ namespace CorporateBankingApp.Controllers
                            s.ReceiverId.ToString().Contains(searchTerm) ||
                            s.Amount.ToString().Contains(searchTerm) ||
                            s.Remarks.ToString().Contains(searchTerm)) &&
-                           s.Status == StatusEnum.Rejected && (s.SenderBankId == id || s.ReceiverBankId == id));
+                           s.Status == StatusEnum.Rejected && s.SenderId == id);
 
             }
 
@@ -719,6 +719,9 @@ namespace CorporateBankingApp.Controllers
                 TotalCount = totalCount
             });
         }
+
+
+
 
 
         [HttpGet("GetAllApprovedClientBank/{id}")]
@@ -865,6 +868,8 @@ namespace CorporateBankingApp.Controllers
                 TotalCount = totalCount
             });
         }
+
+
 
         // Dashboard Population
         [HttpGet("GetDashBoardBank/{id}")]
