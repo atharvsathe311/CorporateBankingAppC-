@@ -12,7 +12,6 @@ namespace CorporateBankingApp.Controllers
     public class ReportsController : ControllerBase
     {
         private readonly CorporateBankAppDbContext _context;
-        //private readonly H
 
         public ReportsController(CorporateBankAppDbContext context)
         {
@@ -20,134 +19,219 @@ namespace CorporateBankingApp.Controllers
         }
 
         [HttpGet("GetCreditPendingTransactionsClient/{id}")]
-        public IActionResult GetCreditPendingTransactionsClient(int id)
+        public IActionResult GetCreditPendingTransactionsClient(int id, DateTime? startDate, DateTime? endDate)
         {
-            var client = _context.Clients.Where(c => c.ClientId == id).FirstOrDefault();
+            var client = _context.Clients.FirstOrDefault(c => c.ClientId == id);
+            if (client == null) return NotFound();
 
-            var transactions = _context.Transactions.Where(t => t.ReceiverId == client.ClientId && t.Status == StatusEnum.Submitted || t.Status==StatusEnum.InProcess).ToList();
-            return Ok(transactions);
+            var transactions = _context.Transactions.Where(t => t.ReceiverId == client.ClientId
+                && (t.Status == StatusEnum.Submitted || t.Status == StatusEnum.InProcess));
+
+            if (startDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date <= endDate.Value);
+            }
+
+            return Ok(transactions.ToList());
         }
 
         [HttpGet("GetCreditApprovedTransactionsClient/{id}")]
-        public IActionResult GetCreditApprovedTransactionsClient(int id)
+        public IActionResult GetCreditApprovedTransactionsClient(int id, DateTime? startDate, DateTime? endDate)
         {
-            var client = _context.Clients.Where(c => c.ClientId == id).FirstOrDefault();
+            var client = _context.Clients.FirstOrDefault(c => c.ClientId == id);
+            if (client == null) return NotFound();
 
-            var transactions = _context.Transactions.Where(t => t.ReceiverId == client.ClientId && t.Status == StatusEnum.Approved).ToList();
-            return Ok(transactions);
+            var transactions = _context.Transactions.Where(t => t.ReceiverId == client.ClientId
+                && t.Status == StatusEnum.Approved);
+
+            if (startDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date <= endDate.Value);
+            }
+
+            return Ok(transactions.ToList());
         }
 
         [HttpGet("GetCreditRejectedTransactionsClient/{id}")]
-        public IActionResult GetCreditRejectedTransactionsClient(int id)
+        public IActionResult GetCreditRejectedTransactionsClient(int id, DateTime? startDate, DateTime? endDate)
         {
-            var client = _context.Clients.Where(c => c.ClientId == id).FirstOrDefault();
+            var client = _context.Clients.FirstOrDefault(c => c.ClientId == id);
+            if (client == null) return NotFound();
 
-            var transactions = _context.Transactions.Where(t => t.ReceiverId == client.ClientId && t.Status == StatusEnum.Rejected).ToList();
-            return Ok(transactions);
+            var transactions = _context.Transactions.Where(t => t.ReceiverId == client.ClientId
+                && t.Status == StatusEnum.Rejected);
+
+            if (startDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date <= endDate.Value);
+            }
+
+            return Ok(transactions.ToList());
         }
 
         [HttpGet("GetDebitPendingTransactionsClient/{id}")]
-        public IActionResult GetDebitPendingTransactionsClient(int id)
+        public IActionResult GetDebitPendingTransactionsClient(int id, DateTime? startDate, DateTime? endDate)
         {
-            var client = _context.Clients.Where(c => c.ClientId == id).FirstOrDefault();
+            var client = _context.Clients.FirstOrDefault(c => c.ClientId == id);
+            if (client == null) return NotFound();
 
-            var transactions = _context.Transactions.Where(t => t.SenderId == client.ClientId && t.Status == StatusEnum.Submitted || t.Status == StatusEnum.InProcess).ToList();
-            return Ok(transactions);
+            var transactions = _context.Transactions.Where(t => t.SenderId == client.ClientId
+                && (t.Status == StatusEnum.Submitted || t.Status == StatusEnum.InProcess));
+
+            if (startDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date <= endDate.Value);
+            }
+
+            return Ok(transactions.ToList());
         }
 
         [HttpGet("GetDebitApprovedTransactionsClient/{id}")]
-        public IActionResult GetDebitApprovedTransactionsClient(int id)
+        public IActionResult GetDebitApprovedTransactionsClient(int id, DateTime? startDate, DateTime? endDate)
         {
-            var client = _context.Clients.Where(c => c.ClientId == id).FirstOrDefault();
+            var client = _context.Clients.FirstOrDefault(c => c.ClientId == id);
+            if (client == null) return NotFound();
 
-            var transactions = _context.Transactions.Where(t => t.SenderId == client.ClientId && t.Status == StatusEnum.Approved).ToList();
-            return Ok(transactions);
+            var transactions = _context.Transactions.Where(t => t.SenderId == client.ClientId
+                && t.Status == StatusEnum.Approved);
+
+            if (startDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date <= endDate.Value);
+            }
+
+            return Ok(transactions.ToList());
         }
 
         [HttpGet("GetDebitRejectedTransactionsClient/{id}")]
-        public IActionResult GetDebitRejectedTransactionsClient(int id)
+        public IActionResult GetDebitRejectedTransactionsClient(int id, DateTime? startDate, DateTime? endDate)
         {
-            var client = _context.Clients.Where(c => c.ClientId == id).FirstOrDefault();
+            var client = _context.Clients.FirstOrDefault(c => c.ClientId == id);
+            if (client == null) return NotFound();
 
-            var transactions = _context.Transactions.Where(t => t.SenderId == client.ClientId && t.Status == StatusEnum.Rejected).ToList();
-            return Ok(transactions);
-        }
+            var transactions = _context.Transactions.Where(t => t.SenderId == client.ClientId
+                && t.Status == StatusEnum.Rejected);
 
-        // GET api/<ReportsController>/5
-        [HttpGet("GetCreditTransactionsClient/{id}")]
-        public IActionResult GetCreditTransactionsClient(int id)
-        {
-            var client = _context.Clients.Where(c=>c.ClientId == id).FirstOrDefault();
+            if (startDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date >= startDate.Value);
+            }
 
-            var transactions = _context.Transactions.Where(t => t.ReceiverId == client.ClientId && t.Status == StatusEnum.Approved).ToList();
-            return Ok(transactions);
-        }
+            if (endDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date <= endDate.Value);
+            }
 
-        [HttpGet("GetDebitTransactionsClient/{id}")]
-        public IActionResult GetDebitTransactionsClient(int id)
-        {
-            var client = _context.Clients.Where(c => c.ClientId == id).FirstOrDefault();
-
-            var transactions = _context.Transactions.Where(t => t.SenderId == client.ClientId && t.Status == StatusEnum.Approved).ToList();
-            return Ok(transactions);
+            return Ok(transactions.ToList());
         }
 
         [HttpGet("GetTotalCreditedAmountClient/{id}")]
-        public IActionResult GetTotalCreditedAmount(int id)
+        public IActionResult GetTotalCreditedAmount(int id, DateTime? startDate, DateTime? endDate)
         {
-            var client = _context.Clients.Where(c => c.ClientId == id).FirstOrDefault();
+            var client = _context.Clients.FirstOrDefault(c => c.ClientId == id);
+            if (client == null) return NotFound();
 
-            var transactions = _context.Transactions.Where(t => t.ReceiverId == client.ClientId && t.Status == StatusEnum.Approved).ToList();
+            var transactions = _context.Transactions.Where(t => t.ReceiverId == client.ClientId
+                && t.Status == StatusEnum.Approved);
 
-            var totalCreditedAmount = 0;
-
-            foreach (var transaction in transactions)
+            if (startDate.HasValue)
             {
-                totalCreditedAmount += int.Parse(transaction.Amount);
+                transactions = transactions.Where(t => t.DateTime.Date >= startDate.Value);
             }
+
+            if (endDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date <= endDate.Value);
+            }
+
+            //var totalCreditedAmount = transactions.Sum(t => int.Parse(t.Amount));
+            long totalCreditedAmount = 0;
+
+            foreach (var t in transactions)
+            {
+                totalCreditedAmount += int.Parse(t.Amount);
+            }
+
             return Ok(totalCreditedAmount);
         }
 
+
         [HttpGet("GetTotalDebitedAmountClient/{id}")]
-        public IActionResult GetTotalDebitedAmount(int id)
+        public IActionResult GetTotalDebitedAmount(int id, DateTime? startDate, DateTime? endDate)
         {
-            var client = _context.Clients.Where(c => c.ClientId == id).FirstOrDefault();
+            var client = _context.Clients.FirstOrDefault(c => c.ClientId == id);
+            if (client == null) return NotFound();
 
-            var transactions = _context.Transactions.Where(t => t.SenderId == client.ClientId && t.Status == StatusEnum.Approved).ToList();
+            var transactions = _context.Transactions.Where(t => t.SenderId == client.ClientId
+                && t.Status == StatusEnum.Approved);
 
-            var totalDebitedAmount = 0;
-
-            foreach (var transaction in transactions)
+            if (startDate.HasValue)
             {
-                totalDebitedAmount += int.Parse(transaction.Amount);
+                transactions = transactions.Where(t => t.DateTime.Date >= startDate.Value);
             }
 
-            Console.WriteLine(totalDebitedAmount);
+            if (endDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date <= endDate.Value);
+            }
+
+            //var totalDebitedAmount = transactions.Sum(t => int.Parse(t.Amount));
+
+            long totalDebitedAmount = 0;
+
+            foreach (var t in transactions)
+            {
+                totalDebitedAmount += int.Parse(t.Amount);
+            }
+
             return Ok(totalDebitedAmount);
         }
-
 
         [HttpGet("GetTotalBalanceClient/{id}")]
         public IActionResult GetTotalBalance(int id)
         {
-            var client = _context.Clients.Include(c => c.BankAccount).Where(c => c.ClientId == id).FirstOrDefault();
+            var client = _context.Clients.Include(c => c.BankAccount).FirstOrDefault(c => c.ClientId == id);
+            if (client == null || client.BankAccount == null) return NotFound();
 
             var totalBalance = client.BankAccount.Balance;
-            Console.WriteLine(totalBalance);
             return Ok(totalBalance);
         }
+
 
         [HttpGet("GetFundAllocationPercentages/{id}")]
         public IActionResult GetFundAllocationPercentages(int id)
         {
-            var client = _context.Clients.Include(c => c.BankAccount).Where(c => c.ClientId == id).FirstOrDefault();
-
+            var client = _context.Clients.Include(c => c.BankAccount).FirstOrDefault(c => c.ClientId == id);
             if (client == null || client.BankAccount == null)
             {
                 return NotFound();
             }
 
-            // Assuming you have a way to get the allocation percentages
             var percentages = new List<decimal>
             {
                 client.BankAccount.InvestmentsAndGrowthPercentage,
@@ -159,6 +243,7 @@ namespace CorporateBankingApp.Controllers
 
             return Ok(percentages);
         }
+
 
 
         [HttpGet("GetClientsOnboardedAdmin")]
@@ -202,16 +287,27 @@ namespace CorporateBankingApp.Controllers
 
         // Get transaction distribution for admin
         [HttpGet("GetTransactionDistributionAdmin")]
-        public IActionResult GetTransactionDistribution()
+        public IActionResult GetTransactionDistribution(DateTime? startDate, DateTime? endDate)
         {
-            var totalTransactions = _context.Transactions.Count();
-            var approvedTransactions = _context.Transactions.Count(t => t.Status == StatusEnum.Approved);
-            var pendingTransactions = _context.Transactions.Count(t => t.Status == StatusEnum.Submitted || t.Status == StatusEnum.InProcess);
-            var rejectedTransactions = _context.Transactions.Count(t => t.Status == StatusEnum.Rejected);
+            var transactions = _context.Transactions.ToList().AsQueryable();
+
+            if (startDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date >= startDate.Value.Date);
+            }
+
+            if (endDate.HasValue)
+            {
+                transactions = transactions.Where(t => t.DateTime.Date <= endDate.Value.Date);
+            }
+
+            var approvedTransactions = transactions.Count(t => t.Status == StatusEnum.Approved);
+            var pendingTransactions = transactions.Count(t => t.Status == StatusEnum.Submitted || t.Status == StatusEnum.InProcess);
+            var rejectedTransactions = transactions.Count(t => t.Status == StatusEnum.Rejected);
 
             var transactionDistribution = new
             {
-                TotalTransactions = totalTransactions,
+                TotalTransactions = transactions.Count(),
                 ApprovedTransactions = approvedTransactions,
                 PendingTransactions = pendingTransactions,
                 RejectedTransactions = rejectedTransactions
