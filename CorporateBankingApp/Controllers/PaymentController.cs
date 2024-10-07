@@ -6,6 +6,7 @@ using CorporateBankingApp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace CorporateBankingApp.Controllers
 {
@@ -35,6 +36,7 @@ namespace CorporateBankingApp.Controllers
             BankAccount sender = await _clientService.GetClientBankAccount(paymentDTO.SenderId);
             BankAccount receiver = await _clientService.GetClientBankAccount(paymentDTO.ReceiverId);
             Client client = await _clientService.GetClientByIdAsync(paymentDTO.SenderId);
+            string bankName = await _emailService.GetBankDetails(sender.BankId);
 
             decimal amount = decimal.Parse(paymentDTO.Amount);
             transaction.SenderId = paymentDTO.SenderId;
@@ -54,9 +56,8 @@ namespace CorporateBankingApp.Controllers
                 sender.BlockedFunds += amount;
 
                 await _clientService.AddTransaction(transaction);
-                await _emailService.SendNewTransactionEmail(client.CompanyEmail,GetBankDetails(sender.BankId).ToString(),sender.AccountId.ToString(), transaction.TransactionId.ToString(),amount, transaction.DateTime,transaction.Status.ToString(),"Submitted");
                 await _corporateBankAppDbContext.SaveChangesAsync();
-
+                await _emailService.SendNewTransactionEmail(client.CompanyEmail,bankName,sender.AccountId.ToString(), transaction.TransactionId.ToString(),amount, transaction.DateTime,transaction.Status.ToString(),transaction.Remarks);
                 return "Transaction Added";
             }
 
@@ -64,6 +65,7 @@ namespace CorporateBankingApp.Controllers
             transaction.Remarks = "Transaction Rejected Due to Insufficient Funds or Account Payable " + transaction.Remarks;
             await _clientService.AddTransaction(transaction);
             await _corporateBankAppDbContext.SaveChangesAsync();
+            _emailService.SendTransactionStatusEmail(client.CompanyEmail, bankName, "Rejected", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
             return "Transaction Rejected Due to Insufficient Funds or Account Payable";
         }
 
@@ -72,6 +74,7 @@ namespace CorporateBankingApp.Controllers
         {
             BankAccount sender = await _clientService.GetClientBankAccount(paymentDTOs[0].SenderId);
             Client client = await _clientService.GetClientByIdAsync(paymentDTOs[0].SenderId);
+            string bankName = await _emailService.GetBankDetails(sender.BankId);
 
 
             foreach (PaymentDTO paymentDTO in paymentDTOs)
@@ -96,14 +99,17 @@ namespace CorporateBankingApp.Controllers
                     sender.AccountPayables -= amount;
                     sender.BlockedFunds += amount;
                     await _clientService.AddTransaction(transaction);
-                    await _emailService.SendNewTransactionEmail(client.CompanyEmail, GetBankDetails(sender.BankId).ToString(), sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Status.ToString(), "Submitted");
+                    await _corporateBankAppDbContext.SaveChangesAsync();
+                    await _emailService.SendNewTransactionEmail(client.CompanyEmail, bankName, sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Status.ToString(),transaction.Remarks);
                     continue;
                 }
 
                 transaction.Status = StatusEnum.Rejected;
                 transaction.Remarks = "Transaction Rejected Due to Insufficient Funds or Account Payable" + paymentDTO.Remarks;
+                await _clientService.AddTransaction(transaction);
+                await _corporateBankAppDbContext.SaveChangesAsync();
+                _emailService.SendTransactionStatusEmail(client.CompanyEmail, bankName, "Rejected", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
             }
-            await _corporateBankAppDbContext.SaveChangesAsync();
             return "Bulk Payment Processed";
         }
 
@@ -112,6 +118,7 @@ namespace CorporateBankingApp.Controllers
         {
             BankAccount sender = await _clientService.GetClientBankAccount(salaryDTOs[0].SenderId);
             Client client = await _clientService.GetClientByIdAsync(salaryDTOs[0].SenderId);
+            string bankName = await _emailService.GetBankDetails(sender.BankId);
 
 
             foreach (SalaryDTO salaryDto in salaryDTOs)
@@ -124,7 +131,7 @@ namespace CorporateBankingApp.Controllers
                 transaction.Amount = salaryDto.Amount;
                 transaction.DateTime = DateTime.Now;
                 transaction.Status = StatusEnum.Submitted;
-                transaction.Remarks = "Salary To " + salaryDto.Name + " " + salaryDto.Remarks;
+                transaction.Remarks = "Salary To " + salaryDto.Email + " " + salaryDto.Name + " " + salaryDto.Remarks;
                 transaction.SenderBankId = sender.BankId;
                 transaction.ReceiverBankId = 99999;
 
@@ -133,14 +140,17 @@ namespace CorporateBankingApp.Controllers
                     sender.SalaryPayments -= amount;
                     sender.BlockedFunds += amount;
                     await _clientService.AddTransaction(transaction);
-                    await _emailService.SendNewTransactionEmail(client.CompanyEmail, GetBankDetails(sender.BankId).ToString(), sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Status.ToString(), "Submitted");
+                    await _corporateBankAppDbContext.SaveChangesAsync();
+                    await _emailService.SendNewTransactionEmail(client.CompanyEmail,bankName, sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Status.ToString(), transaction.Remarks);
                     continue;
                 }
 
                 transaction.Status = StatusEnum.Rejected;
                 transaction.Remarks = "Transaction Rejected Due to Insufficient Salary " + transaction.Remarks;
+                await _clientService.AddTransaction(transaction);
+                await _corporateBankAppDbContext.SaveChangesAsync();
+                _emailService.SendTransactionStatusEmail(client.CompanyEmail, bankName, "Rejected", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
             }
-            await _corporateBankAppDbContext.SaveChangesAsync();
             return "Salary Payment Processed";
         }
 
@@ -178,6 +188,7 @@ namespace CorporateBankingApp.Controllers
                 var transaction = await _transactionService.GetTransactionByIdAsync(id);
                 BankAccount sender = await _clientService.GetClientBankAccount(transaction.SenderId);
                 Client client = await _clientService.GetClientByIdAsync(transaction.SenderId);
+                string bankName = await _emailService.GetBankDetails(sender.BankId);
                 transaction.Status = StatusEnum.Approved;
 
                 decimal amount = decimal.Parse(transaction.Amount);
@@ -187,33 +198,48 @@ namespace CorporateBankingApp.Controllers
                     {
                         sender.BlockedFunds -= amount;
                         transaction.Remarks += " Salary Payment Success";
-                        _emailService.SendTransactionStatusEmail(client.CompanyEmail, GetBankDetails(sender.BankId).ToString(), "Approved", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
+                        await _corporateBankAppDbContext.SaveChangesAsync();
+                        _emailService.SendTransactionStatusEmail(client.CompanyEmail, bankName, "Approved", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
+                        string emailPattern = @"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}";
+                        Match emailMatch = Regex.Match(transaction.Remarks, emailPattern);
+                        if (emailMatch.Success)
+                        {
+                            string extractedEmail = emailMatch.Value;
+                            _emailService.SendSalaryCreditedEmail(extractedEmail, "Client", transaction.TransactionId.ToString(),amount,transaction.ReceiverId.ToString(), transaction.DateTime.ToString());
+                        }
+                        else
+                        {
+                            Console.WriteLine("No email found in the remarks.");
+                        }
+
                     }
                     else
                     {
                         transaction.Status = StatusEnum.Rejected;
                         transaction.Remarks += " Insufficient blocked funds for salary release";
-                        _emailService.SendTransactionStatusEmail(client.CompanyEmail, GetBankDetails(sender.BankId).ToString(), "Rejected", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
+                        await _corporateBankAppDbContext.SaveChangesAsync();
+                        _emailService.SendTransactionStatusEmail(client.CompanyEmail, bankName, "Rejected", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
                     }
                 }
                 else
                 {
                     BankAccount receiver = await _clientService.GetClientBankAccount(transaction.ReceiverId);
                     Client receiverClient = await _clientService.GetClientByIdAsync(transaction.ReceiverId);
+                    string receiverBankName = await _emailService.GetBankDetails(receiver.BankId);
 
                     if (sender.BlockedFunds >= amount)
                     {
                         sender.BlockedFunds -= amount;
                         receiver.AddFunds(amount);
                         transaction.Remarks += " Payment Success";
-                        _emailService.SendTransactionStatusEmail(client.CompanyEmail, GetBankDetails(sender.BankId).ToString(), "Approved", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
-                        _emailService.SendTransactionStatusEmailReceived(receiverClient.CompanyEmail, GetBankDetails(receiver.BankId).ToString(), receiver.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks, client.CompanyName, receiver.SalaryPercentage, receiver.AccountPayablesPercentage, receiver.TaxesPercentage, receiver.EmergencyFundsPercentage, receiver.InvestmentsAndGrowthPercentage);
+                        _emailService.SendTransactionStatusEmail(client.CompanyEmail, bankName, "Approved", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
+                        _emailService.SendTransactionStatusEmailReceived(receiverClient.CompanyEmail,receiverBankName , receiver.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks, client.CompanyName, receiver.SalaryPercentage, receiver.AccountPayablesPercentage, receiver.TaxesPercentage, receiver.EmergencyFundsPercentage, receiver.InvestmentsAndGrowthPercentage);
                     }
                     else
                     {
                         transaction.Status = StatusEnum.Rejected;
                         transaction.Remarks += " Insufficient blocked funds for payment release";
-                        _emailService.SendTransactionStatusEmail(client.CompanyEmail, GetBankDetails(sender.BankId).ToString(), "Rejected", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
+                        _emailService.SendTransactionStatusEmail(client.CompanyEmail, bankName, "Rejected", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
                     }
                 }
             }
@@ -258,20 +284,21 @@ namespace CorporateBankingApp.Controllers
                 BankAccount sender = await _clientService.GetClientBankAccount(transaction.SenderId);
                 Client client = await _clientService.GetClientByIdAsync(transaction.SenderId);
                 decimal amount = decimal.Parse(transaction.Amount);
+                string bankName = await _emailService.GetBankDetails(sender.BankId);
 
                 if (transaction.Remarks.StartsWith("Salary"))
                 {
                     sender.BlockedFunds -= amount;
                     sender.Balance += amount;
                     sender.SalaryPayments += amount;
-                    _emailService.SendTransactionStatusEmail(client.CompanyEmail, GetBankDetails(sender.BankId).ToString(), "Rejected", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
+                    _emailService.SendTransactionStatusEmail(client.CompanyEmail, bankName, "Rejected", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
                 }
                 else
                 {
                     sender.BlockedFunds -= amount;
                     sender.Balance += amount;
                     sender.AccountPayables += amount;
-                    _emailService.SendTransactionStatusEmail(client.CompanyEmail, GetBankDetails(sender.BankId).ToString(), "Rejected", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
+                    _emailService.SendTransactionStatusEmail(client.CompanyEmail, bankName, "Rejected", sender.AccountId.ToString(), transaction.TransactionId.ToString(), amount, transaction.DateTime, transaction.Remarks);
                 }
                 transaction.Status = StatusEnum.Rejected;
                 await _corporateBankAppDbContext.SaveChangesAsync();
@@ -279,12 +306,7 @@ namespace CorporateBankingApp.Controllers
             return "Bulk Payment Rejections Processed";
         }
 
-        [HttpGet("GetBank")]
-        public async Task<string> GetBankDetails(int id)
-        {
-            Bank bank = await _corporateBankAppDbContext.Banks.Where(b => b.BankId == id).FirstOrDefaultAsync();
-            return bank.BankName;
-        }
+
     }
 
 }

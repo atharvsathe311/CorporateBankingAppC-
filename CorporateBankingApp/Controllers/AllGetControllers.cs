@@ -132,7 +132,8 @@ namespace CorporateBankingApp.Controllers
                     b.BankName,
                     b.BankEmail,
                     b.BankIFSCCode,
-                    b.Status
+                    b.Status,
+                    b.isActive
                 })
                 .ToList();
 
@@ -637,7 +638,7 @@ namespace CorporateBankingApp.Controllers
 
             if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                query = query.Where(s => s.Status == StatusEnum.Approved && s.SenderId == id);
+                query = query.Where(s => s.Status == StatusEnum.Approved && (s.SenderId == id || s.ReceiverId==id));
             }
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -647,7 +648,7 @@ namespace CorporateBankingApp.Controllers
                            s.ReceiverId.ToString().Contains(searchTerm) ||
                            s.Amount.ToString().Contains(searchTerm) ||
                            s.Remarks.ToString().Contains(searchTerm)) &&
-                           s.Status == StatusEnum.Approved && s.SenderId == id);
+                           s.Status == StatusEnum.Approved && ( s.SenderId == id || s.ReceiverId == id));
 
             }
 
@@ -754,13 +755,14 @@ namespace CorporateBankingApp.Controllers
             var clients = query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(c => new ViewSubmittedClientDTO
+                .Select(c => new 
                 {
                     ClientId = c.ClientId,
                     CompanyName = c.CompanyName,
                     CompanyEmail = c.CompanyEmail,
                     CompanyPhone = c.CompanyPhone,
-                    Status = c.Status
+                    Status = c.Status,
+                    isActive = c.isActive
                 })
                 .ToListAsync();
 
@@ -961,7 +963,7 @@ namespace CorporateBankingApp.Controllers
         public async Task<List<GetBeneficiaryDTO>> GetClientForBeneficiary(int id)
         {
             var clients = await _context.Clients
-                .Where(s => s.Status == StatusEnum.Approved && s.ClientId != id)
+                .Where(s => s.Status == StatusEnum.Approved && s.ClientId != id && s.isActive == true)
                 .ToListAsync();
 
 

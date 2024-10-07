@@ -11,5 +11,7 @@
         void SendClientKycApprovalEmail(string toEmail, string clientName, string kycId, string powerOfAttorneyUrl, string bankAccessUrl, string mouUrl);
         void SendKycRejectedEmail(string toEmail, string bankName, string kycId, string remark);
         void SendClientKycRejectedEmail(string toEmail, string clientName, string kycId, string remark);
+        void SendSalaryCreditedEmail(string toEmail, string clientName, string transactionId, decimal amount, string bankName, string transactionDate);
+        Task<string> GetBankDetails(int id);
     }
 }

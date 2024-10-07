@@ -30,6 +30,25 @@ namespace CorporateBankingApp.Service.AuthService
                 }
 
                 var user = _context.UserLogins.FirstOrDefault(s => s.LoginUserName == loginRequests.Username);
+
+                if (user.UserType == UserType.Client)
+                {
+                    var tempClient = _context.Clients.Where(c => c.UserLogin.LoginUserName == user.LoginUserName).FirstOrDefault();
+                    if (tempClient.isActive == false)
+                    {
+                        throw new Exception("Invalid credentials");
+                    }
+                }
+
+                if (user.UserType == UserType.Bank)
+                {
+                    var tempClient = _context.Banks.Where(c => c.UserLogin.LoginUserName == user.LoginUserName).FirstOrDefault();
+                    if (tempClient.isActive == false)
+                    {
+                        throw new Exception("Invalid credentials");
+                    }
+                }
+
                 if (user == null)
                 {
                     throw new Exception("Invalid credentials");
@@ -84,7 +103,7 @@ namespace CorporateBankingApp.Service.AuthService
                     issuer: _configuration["Jwt:Issuer"],
                     audience: _configuration["Jwt:Audience"],
                     claims: claims,
-                    expires: DateTime.UtcNow.AddMinutes(30),
+                    expires: DateTime.UtcNow.AddMinutes(1),
                     signingCredentials: signIn
                 );
 

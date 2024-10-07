@@ -78,7 +78,7 @@ namespace CorporateBankingApp.Controllers
             client.BeneficiaryLists = new List<int>() { };
             await _clientService.CreateClientAsync(client);
 
-            if (client.ClientId != 0) // Ensure ClientId is set
+            if (client.ClientId != 0)
             {
                 bank.ClientList.Add(client.ClientId);
             }
@@ -258,7 +258,7 @@ namespace CorporateBankingApp.Controllers
         {
             Client client = await _dbContext.Clients.Where(s => s.ClientId == id).Include(c => c.ClientKyc).ThenInclude(c => c.PowerOfAttorney).Include(c => c.ClientKyc).ThenInclude(c => c.BankAccess).Include(c => c.ClientKyc).ThenInclude(c => c.MOU).FirstOrDefaultAsync();
 
-            Bank bank = await _bankService.GetBankByIdAsync(1);
+            Bank bank = await _bankService.GetBankByIdAsync(client.BankId);
             BankAccount bankAccount = new BankAccount(50000000m) { BlockedFunds = 0, CreatedAt = DateTime.Now };
             bank.BankAccounts.Add(bankAccount);
             client.BankAccount = bankAccount;
@@ -285,6 +285,7 @@ namespace CorporateBankingApp.Controllers
             Client client = new Client
             {
                 CompanyName = clientDTO.FullName,
+                CompanyEmail = clientDTO.Email,
                 CreatedAt = DateTime.Now,
                 isActive = true
             };
@@ -353,6 +354,64 @@ namespace CorporateBankingApp.Controllers
             await _dbContext.SaveChangesAsync();
 
             return Ok("Beneficiary has been added successfully.");
+        }
+
+
+        [HttpPost("deactivate/{entityType}/{id}")]
+        public async Task<IActionResult> DeactivateEntity(string entityType, int id)
+        {
+            if (entityType.ToLower() == "client")
+            {
+                Client client = await _dbContext.Clients.FindAsync(id);
+                if (client == null)
+                    return NotFound("Client not found.");
+
+                client.isActive = false;
+            }
+            else if (entityType.ToLower() == "bank")
+            {
+                Bank bank = await _dbContext.Banks.FindAsync(id);
+                if (bank == null)
+                    return NotFound("Bank not found.");
+
+                bank.isActive = false;
+            }
+            else
+            {
+                return BadRequest("Invalid entity type.");
+            }
+
+            await _dbContext.SaveChangesAsync();
+            return Ok("Entity deactivated successfully.");
+        }
+
+        // Endpoint to reactivate (set isActive to true)
+        [HttpPost("activate/{entityType}/{id}")]
+        public async Task<IActionResult> ActivateEntity(string entityType, int id)
+        {
+            if (entityType.ToLower() == "client")
+            {
+                var client = await _dbContext.Clients.FindAsync(id);
+                if (client == null)
+                    return NotFound("Client not found.");
+
+                client.isActive = true;
+            }
+            else if (entityType.ToLower() == "bank")
+            {
+                var bank = await _dbContext.Banks.FindAsync(id);
+                if (bank == null)
+                    return NotFound("Bank not found.");
+
+                bank.isActive = true;
+            }
+            else
+            {
+                return BadRequest("Invalid entity type.");
+            }
+
+            await _dbContext.SaveChangesAsync();
+            return Ok("Entity activated successfully.");
         }
 
 

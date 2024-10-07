@@ -5,11 +5,19 @@ using static System.Net.WebRequestMethods;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Numerics;
 using System;
+using CorporateBankingApp.Data;
+using CorporateBankingApp.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace CorporateBankingApp.Service
 {
     public class EmailService : IEmailService
     {
+        private readonly CorporateBankAppDbContext _context;
+        public EmailService(CorporateBankAppDbContext corporateBankAppDbContext) 
+        {
+            _context = corporateBankAppDbContext;
+        }
         public async void SendEmail(string toEmail, string subject, string body)
         {
             var smtpClient = new SmtpClient
@@ -355,7 +363,7 @@ namespace CorporateBankingApp.Service
         </div>
         <div class=""content"">
             <h1>Dear Customer,</h1>
-                <p>Your transaction for the {bankName} Bank Account with <strong>Transaction ID {transactionId}</strong> has been <strong>{{{{TransactionStatus}}}}</strong>.</p>
+                <p>Your transaction for the {bankName} Bank Account with <strong>Transaction ID {transactionId}</strong> has been <strong>{transactionStatus}</strong>.</p>
             <p>Here are the details of your transaction:</p>
 
             <div class=""details"">
@@ -421,6 +429,12 @@ namespace CorporateBankingApp.Service
         public async void SendTransactionStatusEmailReceived(string toEmail, string bankName, string accountNumber, string transactionId, decimal transactionAmount, DateTime transactionDate, string transactionRemarks,string senderName , decimal salaryPayments, decimal accountPayables, decimal taxes, decimal emergencyFunds, decimal investmentsAndGrowth)
         {
             string subject = "Funds Credited Alert";
+            decimal salaryPaymentsVar = transactionAmount * (salaryPayments / 100);
+            decimal accountPayablesVar = transactionAmount * (accountPayables / 100);
+            decimal taxesVar = transactionAmount * ( taxes / 100);
+            decimal emergencyFundsVar = transactionAmount * (emergencyFunds / 100);
+            decimal investmentsAndGrowthVar = transactionAmount * (investmentsAndGrowth / 100);
+
             var body = $@"
 <!DOCTYPE html>
 <html lang=""en"">
@@ -488,19 +502,19 @@ namespace CorporateBankingApp.Service
                 <p><strong>Remarks:</strong> {transactionRemarks}</p>
             </div>
             <div class=""details"">
-                < h3 > Funds Split - Up:</ h3 >
-                < p >< strong > Salary Payments:</ strong > {salaryPayments}</ p >
-                < p >< strong > Account Payables:</ strong > {accountPayables}</ p >
-                < p >< strong > Taxes:</ strong > {taxes}</ p >
-                < p >< strong > Emergency Funds:</ strong > {emergencyFunds}</ p >
-                < p >< strong > Investments and Growth:</ strong > {investmentsAndGrowth}</ p >
-            </ div >
+                <h3> Funds Split - Up:</h3>
+                <p><strong> Salary Payments:</strong>{salaryPaymentsVar}</p>
+                <p><strong> Account Payables:</strong> {accountPayablesVar}</p>
+                <p><strong> Taxes:</strong > {taxesVar}</p>
+                <p><strong> Emergency Funds:</strong> {emergencyFundsVar}</p>
+                <p><strong> Investments and Growth:</strong> {investmentsAndGrowthVar}</p>
+            </div>
 
-            < p > If you have any questions regarding this transaction, please feel free to contact our support team at<strong> bankingcorporate011@gmail.com </ strong >.</ p >
-            < p > Thank you for using < strong > CIB Portal </ strong > !</ p >
-        </ div >
+            <p> If you have any questions regarding this transaction, please feel free to contact our support team at<strong> bankingcorporate011@gmail.com </strong>.</p>
+            <p> Thank you for using <strong> CIB Portal </strong>!</p>
+        </div>
 
-        < div class=""footer"">
+        <div class=""footer"">
             Best regards,<br>
             <strong>Atharv & Amit</strong><br>
             CIB Team<br>
@@ -1033,6 +1047,133 @@ namespace CorporateBankingApp.Service
                 Console.WriteLine($"Error: {ex.Message}");
             }
         }
+        public async void SendSalaryCreditedEmail(string toEmail, string clientName, string transactionId, decimal amount, string bankName, string transactionDate)
+        {
+            string subject = "Salary Credited for This Month";
 
+            var body = $@"
+<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Salary Credited Notification</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }}
+        .container {{
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }}
+        .header {{
+            background-color: #0d6efd;
+            padding: 10px;
+            text-align: center;
+            color: #ffffff;
+            font-size: 24px;
+        }}
+        .content {{
+            padding: 20px;
+        }}
+        .content h1 {{
+            color: #333333;
+        }}
+        .details {{
+            background-color: #f9f9f9;
+            padding: 15px;
+            border: 1px solid #dddddd;
+        }}
+        .footer {{
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777777;
+            text-align: center;
+        }}
+        a {{
+            color: #0d6efd;
+            text-decoration: none;
+        }}
+    </style>
+</head>
+<body>
+    <div class=""container"">
+        <div class=""header"">
+            Salary Credited for This Month
+        </div>
+        <div class=""content"">
+            <h1>Dear {clientName},</h1>
+            <p>We are pleased to inform you that your salary for this month has been successfully credited to your account.</p>
+            
+            <div class=""details"">
+                <h3>Transaction Details:</h3>
+                <ul>
+                    <li><strong>Transaction ID:</strong> {transactionId}</li>
+                    <li><strong>Amount:</strong> ₹{amount}</li>
+                    <li><strong>Account Number:</strong> {bankName}</li>
+                    <li><strong>Transaction Date:</strong> {transactionDate}</li>
+                </ul>
+            </div>
+
+            <p>You can check your account balance and recent transactions by logging into your <strong>CIB Portal</strong>.</p>
+            <p>If you have any questions or concerns regarding the transaction, please contact our support team at <strong>bankingcorporate011@gmail.com</strong>.</p>
+        </div>
+
+        <div class=""footer"">
+            Best regards,<br>
+            <strong>Atharv & Amit</strong><br>
+            CIB Team<br>
+            <a href=""https://corporate-internet-banking.vercel.app/login"">Login to your dashboard</a><br>
+            [Support Contact Information]
+        </div>
+    </div>
+</body>
+</html>
+";
+
+            var smtpClient = new SmtpClient
+            {
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false,
+                EnableSsl = true,
+                Host = "smtp.gmail.com",
+                Port = 587,
+                Credentials = new NetworkCredential("bankingcorporate011@gmail.com", "uwlnioczhmkmvztb")
+            };
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress("bankingcorporate011@gmail.com", "Corporate Banking Portal"),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = true,
+            };
+
+            mailMessage.To.Add(toEmail);
+
+            try
+            {
+                Console.WriteLine("Sending Email...");
+                await smtpClient.SendMailAsync(mailMessage);
+                Console.WriteLine("Email Sent");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+
+        public async Task<string> GetBankDetails(int id)
+        {
+            Bank bank = await _context.Banks.Where(b => b.BankId == id).FirstOrDefaultAsync();
+            return bank.BankName;
+        }
     }
 }
