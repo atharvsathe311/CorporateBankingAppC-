@@ -11,5 +11,6 @@ namespace CorporateBankingApp.Services
         Task CreateBankAsync(Bank bank);
         Task UpdateBankAsync(Bank bank);
         Task DeleteBankAsync(int id);
+        string ParseString(string input);
     }
 }

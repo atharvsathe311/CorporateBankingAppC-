@@ -103,7 +103,7 @@ namespace CorporateBankingApp.Service.AuthService
                     issuer: _configuration["Jwt:Issuer"],
                     audience: _configuration["Jwt:Audience"],
                     claims: claims,
-                    expires: DateTime.UtcNow.AddMinutes(1),
+                    expires: DateTime.UtcNow.AddMinutes(30),
                     signingCredentials: signIn
                 );
 

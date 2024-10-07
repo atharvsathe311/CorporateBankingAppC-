@@ -63,9 +63,10 @@ namespace CorporateBankingApp.Controllers
 
             int count = await _clientService.GetCounter();
 
+            string cred = _bankService.ParseString(clientDTO.CompanyName.ToUpper());
             UserLogin userLogin = new UserLogin
             {
-                LoginUserName = clientDTO.CompanyName.ToUpper().Substring(0, 4) + count,
+                LoginUserName = cred + count,
                 PasswordHash = BCrypt.Net.BCrypt.EnhancedHashPassword("Admin@123"),
                 UserType = UserType.Client
             };

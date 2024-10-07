@@ -44,5 +44,34 @@ namespace CorporateBankingApp.Services
         {
             await _bankRepository.DeleteAsync(id);
         }
+
+        public string ParseString(string input)
+        {
+            int requiredLength = 4;
+            input = input.Trim();
+
+            string output = "";
+            Random random = new Random();
+
+            foreach (char c in input)
+            {
+                if (c == ' ')
+                    continue;
+
+                output += c;
+
+                if (output.Length == requiredLength)
+                    break;
+            }
+
+            while (output.Length < requiredLength)
+            {
+                char randomChar = (char)random.Next('A', 'Z' + 1);
+                output += randomChar;
+            }
+
+            return output;
+        }
+
     }
 }

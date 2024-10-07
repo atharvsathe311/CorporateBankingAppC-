@@ -18,7 +18,7 @@ namespace CorporateBankingApp.Controllers
         private readonly IClientService _clientService;
         private readonly IEmailService _emailService;
 
-        public BankController(IBankService bankService, IMapper mapper, IClientService clientService,IEmailService emailService)
+        public BankController(IBankService bankService, IMapper mapper, IClientService clientService, IEmailService emailService)
         {
             _bankService = bankService;
             _mapper = mapper;
@@ -49,9 +49,10 @@ namespace CorporateBankingApp.Controllers
             int count = await _clientService.GetCounter();
 
             bank.Status = StatusEnum.Submitted;
+            string cred = _bankService.ParseString(bankDto.BankName.ToUpper());
             UserLogin userLogin = new UserLogin()
-            {
-                LoginUserName = bankDto.BankName.ToUpper().Substring(0, 4) + count,
+            {      
+                LoginUserName = cred + count,
                 PasswordHash = BCrypt.Net.BCrypt.EnhancedHashPassword("Admin@123"),
                 UserType = UserType.Bank,
             };
@@ -61,7 +62,10 @@ namespace CorporateBankingApp.Controllers
 
             await _bankService.CreateBankAsync(bank);
             _emailService.SendNewRegistrationMail(bankDto.BankEmail, bankDto.BankName, userLogin.LoginUserName, "Admin@123");
-            return CreatedAtAction(nameof(GetBankById), new { id = bank.BankId }, bank);
+            return CreatedAtAction(nameof(GetBankById), new
+            {
+                id = bank.BankId
+            }, bank);
         }
 
         [HttpPut("{id}")]
